@@ -65,17 +65,22 @@ export default function AdminDashboard() {
     u.referral_code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Helper function to build downline tree (case-insensitive & trimmed)
-  const getDownlineTree = (referralCode: string) => {
-    if (!referralCode) return [];
-    return users.filter(
-      (u) => u.referred_by?.trim().toLowerCase() === referralCode.trim().toLowerCase()
-    );
+  // Helper function: Checks both ID and Referral Code for matches
+  const getDownlineTree = (userObj: any) => {
+    if (!userObj) return [];
+    return users.filter((u) => {
+      if (!u.referred_by) return false;
+      const ref = u.referred_by.trim().toLowerCase();
+      const userCode = userObj.referral_code?.trim().toLowerCase();
+      const userId = userObj.id?.trim().toLowerCase();
+
+      return ref === userCode || ref === userId;
+    });
   };
 
   // Helper component to render nested downlines recursively
   const TreeNode = ({ user, level = 1 }: { user: any; level?: number }) => {
-    const directDownlines = getDownlineTree(user.referral_code);
+    const directDownlines = getDownlineTree(user);
 
     return (
       <div className="ml-4 border-l border-slate-700/60 pl-3 my-2 space-y-1">
@@ -192,9 +197,9 @@ export default function AdminDashboard() {
             {/* Downline Tree Visualizer */}
             <div className="space-y-3">
               <h4 className="text-sm font-bold text-amber-400">Network Tree</h4>
-              {getDownlineTree(selectedUser.referral_code).length > 0 ? (
+              {getDownlineTree(selectedUser).length > 0 ? (
                 <div className="bg-[#0B0E14] p-3 rounded-xl border border-slate-800/80">
-                  {getDownlineTree(selectedUser.referral_code).map((child) => (
+                  {getDownlineTree(selectedUser).map((child) => (
                     <TreeNode key={child.id} user={child} level={1} />
                   ))}
                 </div>
