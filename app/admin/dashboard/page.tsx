@@ -65,6 +65,22 @@ export default function AdminDashboard() {
     u.referral_code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Translate referred_by (UUID or Code) into clean readable Sponsor Details
+  const getSponsorInfo = (referredBy: string) => {
+    if (!referredBy) return 'Direct Sign-up (No Sponsor)';
+    
+    const cleanRef = referredBy.trim().toLowerCase();
+    const sponsor = users.find(
+      (u) => u.id?.toLowerCase() === cleanRef || u.referral_code?.toLowerCase() === cleanRef
+    );
+
+    if (sponsor) {
+      return `${sponsor.full_name || 'User'} (${sponsor.referral_code})`;
+    }
+
+    return referredBy; // fallback if sponsor profile isn't found
+  };
+
   // Helper function: Checks both ID and Referral Code for matches
   const getDownlineTree = (userObj: any) => {
     if (!userObj) return [];
@@ -191,7 +207,7 @@ export default function AdminDashboard() {
               <p><strong className="text-slate-400">Bank Name:</strong> {selectedUser.bank_name || 'Not provided'}</p>
               <p><strong className="text-slate-400">Account Number:</strong> {selectedUser.account_number || 'Not provided'}</p>
               <p><strong className="text-slate-400">Referral Code:</strong> {selectedUser.referral_code}</p>
-              <p><strong className="text-slate-400">Sponsor Code (Referred By):</strong> {selectedUser.referred_by || 'Direct Sign-up (No Sponsor)'}</p>
+              <p><strong className="text-slate-400">Sponsor (Referred By):</strong> <span className="text-amber-400 font-semibold">{getSponsorInfo(selectedUser.referred_by)}</span></p>
             </div>
 
             {/* Downline Tree Visualizer */}
