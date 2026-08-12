@@ -65,6 +65,39 @@ export default function AdminDashboard() {
     u.referral_code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Helper function to build downline tree
+  const getDownlineTree = (referralCode: string) => {
+    return users.filter((u) => u.referred_by === referralCode);
+  };
+
+  // Helper component to render nested downlines recursively
+  const TreeNode = ({ user, level = 1 }: { user: any; level?: number }) => {
+    const directDownlines = getDownlineTree(user.referral_code);
+
+    return (
+      <div className="ml-4 border-l border-slate-700/60 pl-3 my-2 space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+          <p className="text-xs font-semibold text-white">
+            {user.full_name || 'N/A'}{' '}
+            <span className="text-slate-400 font-normal">({user.email})</span>
+          </p>
+          <span className="text-[10px] bg-slate-800 text-amber-400 font-mono px-2 py-0.5 rounded border border-slate-700">
+            Level {level}
+          </span>
+        </div>
+
+        {directDownlines.length > 0 && (
+          <div className="space-y-1">
+            {directDownlines.map((child) => (
+              <TreeNode key={child.id} user={child} level={level + 1} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen p-8 max-w-5xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold text-white">Admin Control Center</h1>
@@ -136,13 +169,13 @@ export default function AdminDashboard() {
       {/* MANAGE USER MODAL */}
       {selectedUser && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-[#121620] border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-6 text-white">
+          <div className="bg-[#121620] border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 text-white max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-lg font-bold">Agent Profile Details</h3>
+              <h3 className="text-lg font-bold">Agent Details & Downline Tree</h3>
               <button onClick={() => setSelectedUser(null)} className="text-slate-400 hover:text-white">✕</button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-xs border-b border-slate-800 pb-4">
               <p><strong className="text-slate-400">Full Name:</strong> {selectedUser.full_name}</p>
               <p><strong className="text-slate-400">Email:</strong> {selectedUser.email}</p>
               <p><strong className="text-slate-400">Phone:</strong> {selectedUser.phone_number || 'Not provided'}</p>
@@ -150,6 +183,23 @@ export default function AdminDashboard() {
               <p><strong className="text-slate-400">Bank Name:</strong> {selectedUser.bank_name || 'Not provided'}</p>
               <p><strong className="text-slate-400">Account Number:</strong> {selectedUser.account_number || 'Not provided'}</p>
               <p><strong className="text-slate-400">Referral Code:</strong> {selectedUser.referral_code}</p>
+              <p><strong className="text-slate-400">Sponsor Code (Referred By):</strong> {selectedUser.referred_by || 'Direct Sign-up (No Sponsor)'}</p>
+            </div>
+
+            {/* Downline Tree Visualizer */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-amber-400">Network Tree</h4>
+              {getDownlineTree(selectedUser.referral_code).length > 0 ? (
+                <div className="bg-[#0B0E14] p-3 rounded-xl border border-slate-800/80">
+                  {getDownlineTree(selectedUser.referral_code).map((child) => (
+                    <TreeNode key={child.id} user={child} level={1} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 bg-[#0B0E14] p-3 rounded-xl border border-slate-800/80">
+                  This user has not referred any agents yet.
+                </p>
+              )}
             </div>
 
             <button
