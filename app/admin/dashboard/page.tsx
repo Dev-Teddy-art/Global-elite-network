@@ -65,9 +65,12 @@ export default function AdminDashboard() {
     u.referral_code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Helper function to build downline tree
+  // Helper function to build downline tree (case-insensitive & trimmed)
   const getDownlineTree = (referralCode: string) => {
-    return users.filter((u) => u.referred_by === referralCode);
+    if (!referralCode) return [];
+    return users.filter(
+      (u) => u.referred_by?.trim().toLowerCase() === referralCode.trim().toLowerCase()
+    );
   };
 
   // Helper component to render nested downlines recursively
