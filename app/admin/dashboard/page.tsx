@@ -10,6 +10,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   useEffect(() => {
@@ -56,6 +57,31 @@ export default function AdminDashboard() {
       alert('Network error.');
     } finally {
       setLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (saleId: string) => {
+    if (!confirm('Are you sure you want to delete this pending sale? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingId(saleId);
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', saleId);
+
+      if (error) {
+        alert(`Failed to delete: ${error.message}`);
+      } else {
+        alert('Pending sale removed successfully.');
+        setPendingSales((prev) => prev.filter((s) => s.id !== saleId));
+      }
+    } catch (err) {
+      alert('Error connecting to database.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -138,13 +164,22 @@ export default function AdminDashboard() {
                   <p className="text-xs text-slate-400">{sale.description}</p>
                   <p className="text-sm font-bold text-emerald-400 mt-1">₦{Number(sale.amount).toLocaleString()}</p>
                 </div>
-                <button
-                  onClick={() => handleApprove(sale.id)}
-                  disabled={loadingId === sale.id}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs"
-                >
-                  {loadingId === sale.id ? 'Approving...' : 'Approve & Pay Commission'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleApprove(sale.id)}
+                    disabled={loadingId === sale.id || deletingId === sale.id}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition disabled:opacity-50"
+                  >
+                    {loadingId === sale.id ? 'Approving...' : 'Approve & Pay Commission'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(sale.id)}
+                    disabled={loadingId === sale.id || deletingId === sale.id}
+                    className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-600/40 font-bold rounded-xl text-xs transition disabled:opacity-50"
+                  >
+                    {deletingId === sale.id ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             ))
           ) : (
