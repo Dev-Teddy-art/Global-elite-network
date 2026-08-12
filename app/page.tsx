@@ -40,7 +40,7 @@ export default function Home() {
             </div>
 
             <h1 className="text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
-              Redefining <br />
+              Redefine <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-300 to-slate-500">
                 Upscale
               </span> <br />
