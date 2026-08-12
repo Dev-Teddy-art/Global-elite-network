@@ -2,8 +2,14 @@ import './globals.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import type { Metadata, Viewport } from 'next';
 
-export const metadata = {
+export const viewport: Viewport = {
+  themeColor: '#0B0E14',
+  colorScheme: 'dark',
+};
+
+export const metadata: Metadata = {
   title: 'Global Sales Elite | Maximize Your Earnings',
   description: 'Multi-Tier Sales & Commission Platform',
   icons: {
@@ -13,7 +19,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark bg-[#0B0E14]">
       <body className="bg-[#0B0E14] text-white min-h-screen flex flex-col justify-between selection:bg-[#E05244] selection:text-white">
         {/* Navigation Bar */}
         <Navbar />
