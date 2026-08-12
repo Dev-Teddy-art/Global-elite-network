@@ -67,19 +67,22 @@ export default function AdminDashboard() {
 
     setDeletingId(saleId);
     try {
-      const { error } = await supabase
-        .from('sales')
-        .delete()
-        .eq('id', saleId);
+      const res = await fetch('/api/admin/delete-sale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ saleId }),
+      });
 
-      if (error) {
-        alert(`Failed to delete: ${error.message}`);
-      } else {
+      const data = await res.json();
+
+      if (res.ok && data.success) {
         alert('Pending sale removed successfully.');
         setPendingSales((prev) => prev.filter((s) => s.id !== saleId));
+      } else {
+        alert(`Failed to delete: ${data.error}`);
       }
     } catch (err) {
-      alert('Error connecting to database.');
+      alert('Error connecting to server.');
     } finally {
       setDeletingId(null);
     }
@@ -91,7 +94,6 @@ export default function AdminDashboard() {
     u.referral_code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Translate referred_by (UUID or Code) into clean readable Sponsor Details
   const getSponsorInfo = (referredBy: string) => {
     if (!referredBy) return 'Direct Sign-up (No Sponsor)';
     
@@ -104,10 +106,9 @@ export default function AdminDashboard() {
       return `${sponsor.full_name || 'User'} (${sponsor.referral_code})`;
     }
 
-    return referredBy; // fallback if sponsor profile isn't found
+    return referredBy;
   };
 
-  // Helper function: Checks both ID and Referral Code for matches
   const getDownlineTree = (userObj: any) => {
     if (!userObj) return [];
     return users.filter((u) => {
@@ -120,7 +121,6 @@ export default function AdminDashboard() {
     });
   };
 
-  // Helper component to render nested downlines recursively
   const TreeNode = ({ user, level = 1 }: { user: any; level?: number }) => {
     const directDownlines = getDownlineTree(user);
 
