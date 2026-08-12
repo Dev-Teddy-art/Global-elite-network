@@ -23,6 +23,7 @@ export default function UserDashboard() {
   const [dob, setDob] = useState('');
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
+  const [accountName, setAccountName] = useState('');
 
   useEffect(() => {
     loadDashboardData();
@@ -47,6 +48,7 @@ export default function UserDashboard() {
       setDob(prof.date_of_birth || '');
       setBankName(prof.bank_name || '');
       setAccountNumber(prof.account_number || '');
+      setAccountName(prof.account_name || '');
 
       const { count } = await supabase
         .from('sales')
@@ -137,6 +139,7 @@ export default function UserDashboard() {
         date_of_birth: dob,
         bank_name: bankName,
         account_number: accountNumber,
+        account_name: accountName,
       })
       .eq('id', user.id)
       .select()
@@ -223,7 +226,7 @@ export default function UserDashboard() {
         </div>
 
         {/* Live Profile Data Overview Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-slate-800/80 pt-4 text-xs">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 border-t border-slate-800/80 pt-4 text-xs">
           <div>
             <p className="text-[10px] uppercase font-bold text-slate-500">Phone</p>
             <p className="text-slate-200 font-semibold mt-0.5">{profile?.phone_number || 'Not Set'}</p>
@@ -235,6 +238,10 @@ export default function UserDashboard() {
           <div>
             <p className="text-[10px] uppercase font-bold text-slate-500">Bank Name</p>
             <p className="text-slate-200 font-semibold mt-0.5">{profile?.bank_name || 'Not Set'}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase font-bold text-slate-500">Account Name</p>
+            <p className="text-slate-200 font-semibold mt-0.5">{profile?.account_name || 'Not Set'}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase font-bold text-slate-500">Account Number</p>
@@ -294,6 +301,17 @@ export default function UserDashboard() {
           </div>
 
           <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">Account Name</label>
+            <input
+              type="text"
+              placeholder="Name on bank account"
+              value={accountName}
+              onChange={(e) => setAccountName(e.target.value)}
+              className="w-full bg-[#0B0E14] border border-slate-800 rounded-xl p-3 text-xs text-white"
+            />
+          </div>
+
+          <div className="md:col-span-2">
             <label className="block text-xs font-semibold text-slate-400 mb-1">Account Number</label>
             <input
               type="text"
