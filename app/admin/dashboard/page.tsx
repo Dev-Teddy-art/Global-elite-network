@@ -240,6 +240,7 @@ export default function AdminDashboard() {
               <p><strong className="text-slate-400">Phone:</strong> {selectedUser.phone_number || 'Not provided'}</p>
               <p><strong className="text-slate-400">Date of Birth:</strong> {selectedUser.date_of_birth || 'Not provided'}</p>
               <p><strong className="text-slate-400">Bank Name:</strong> {selectedUser.bank_name || 'Not provided'}</p>
+              <p><strong className="text-slate-400">Account Name:</strong> {selectedUser.account_name || 'Not provided'}</p>
               <p><strong className="text-slate-400">Account Number:</strong> {selectedUser.account_number || 'Not provided'}</p>
               <p><strong className="text-slate-400">Referral Code:</strong> {selectedUser.referral_code}</p>
               <p><strong className="text-slate-400">Sponsor (Referred By):</strong> <span className="text-amber-400 font-semibold">{getSponsorInfo(selectedUser.referred_by)}</span></p>
