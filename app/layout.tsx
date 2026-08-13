@@ -20,15 +20,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark bg-[#0B0E14]">
-      <body className="bg-[#0B0E14] text-white min-h-screen flex flex-col justify-between selection:bg-[#E05244] selection:text-white">
+      <body className="bg-[#0B0E14] text-white min-h-screen flex flex-col justify-between selection:bg-[#E05244] selection:text-white overflow-x-hidden">
         {/* Navigation Bar */}
         <Navbar />
 
-        {/* Main Page Content */}
-        <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-8">{children}</main>
+        {/* Main Page Content - Added overflow-x-hidden and responsive horizontal padding */}
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-8 overflow-x-hidden">
+          {children}
+        </main>
 
         {/* Global Brand Footer */}
-        <footer className="border-t border-slate-900 bg-[#080A0F] pt-12 pb-8 px-6 mt-16">
+        <footer className="border-t border-slate-900 bg-[#080A0F] pt-12 pb-8 px-4 sm:px-6 mt-16">
           <div className="max-w-6xl mx-auto space-y-10">
             
             {/* Top Footer Section */}

@@ -15,6 +15,7 @@ export default function UserDashboard() {
   const [approvedSalesCount, setApprovedSalesCount] = useState(0);
   const [totalCommissions, setTotalCommissions] = useState(0);
   
+  const [userSales, setUserSales] = useState<any[]>([]);
   const [level1Users, setLevel1Users] = useState<any[]>([]);
   const [level2Users, setLevel2Users] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
@@ -50,6 +51,7 @@ export default function UserDashboard() {
       setAccountNumber(prof.account_number || '');
       setAccountName(prof.account_name || '');
 
+      // Approved sales count
       const { count } = await supabase
         .from('sales')
         .select('*', { count: 'exact', head: true })
@@ -58,6 +60,16 @@ export default function UserDashboard() {
 
       setApprovedSalesCount(count || 0);
 
+      // Total user sales list
+      const { data: salesList } = await supabase
+        .from('sales')
+        .select('*')
+        .eq('seller_id', user.id)
+        .order('created_at', { ascending: false });
+
+      setUserSales(salesList || []);
+
+      // Total earned commissions
       const { data: comms } = await supabase
         .from('commissions')
         .select('amount')
@@ -66,18 +78,20 @@ export default function UserDashboard() {
       const total = comms?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
       setTotalCommissions(total);
 
+      // Level 1 Referrals (Directly referred by user)
       const { data: l1 } = await supabase
         .from('profiles')
-        .select('id, full_name, email, referral_code')
+        .select('id, full_name, email, referral_code, created_at')
         .eq('referred_by', user.id);
 
       setLevel1Users(l1 || []);
 
+      // Level 2 Referrals (Referred by Level 1 agents)
       if (l1 && l1.length > 0) {
         const l1Ids = l1.map((u) => u.id);
         const { data: l2 } = await supabase
           .from('profiles')
-          .select('id, full_name, email, referral_code')
+          .select('id, full_name, email, referral_code, referred_by, created_at')
           .in('referred_by', l1Ids);
 
         setLevel2Users(l2 || []);
@@ -161,17 +175,26 @@ export default function UserDashboard() {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('sales').insert({
+    const newSalePayload = {
       seller_id: user?.id,
       amount: Number(amount),
       description,
       status: 'pending',
-    });
+    };
+
+    const { data: newSale, error } = await supabase
+      .from('sales')
+      .insert(newSalePayload)
+      .select()
+      .single();
 
     if (!error) {
       alert('Sale logged successfully! Awaiting admin approval.');
       setAmount('');
       setDescription('');
+      if (newSale) {
+        setUserSales((prev) => [newSale, ...prev]);
+      }
     } else {
       alert(`Failed to log sale: ${error.message}`);
     }
@@ -263,6 +286,191 @@ export default function UserDashboard() {
         </div>
       </div>
 
+      {/* MY REFERRALS BINARY NETWORK TREE */}
+      <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-6">
+        <div className="flex justify-between items-center border-b border-slate-800/80 pb-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-white">My Referral Network</h2>
+            <p className="text-xs text-slate-400">Hierarchical visual structure of your direct (L1) and downline (L2) network.</p>
+          </div>
+          <span className="text-xs font-mono bg-slate-900 text-amber-400 border border-slate-800 px-3 py-1 rounded-full">
+            Direct Team: {level1Users.length}
+          </span>
+        </div>
+
+        {/* Tree Canvas */}
+        <div className="bg-[#0B0E14] p-6 rounded-2xl border border-slate-800/80 overflow-x-auto min-h-[350px] flex items-center justify-center">
+          <div className="min-w-[650px] flex flex-col items-center py-4">
+            
+            {/* LEVEL 0: ROOT NODE (AGENT) */}
+            <div className="flex flex-col items-center relative">
+              <div className="bg-[#121620] border-2 border-[#E05244] px-6 py-2.5 rounded-2xl text-center shadow-xl z-10 w-56">
+                <span className="text-[9px] uppercase font-bold text-amber-400 tracking-wider block">ROOT LEG</span>
+                <p className="text-xs font-bold text-white truncate">{profile?.full_name || 'YOU'}</p>
+                <p className="text-[10px] font-mono text-slate-400 truncate">{profile?.email}</p>
+              </div>
+              
+              {/* Vertical Connector Line down from Root */}
+              {level1Users.length > 0 && (
+                <div className="w-0.5 h-6 bg-gradient-to-b from-[#E05244] to-slate-700"></div>
+              )}
+            </div>
+
+            {/* LEVEL 1: DIRECT REFERRALS (HORIZONTAL BRANCHING) */}
+            {level1Users.length > 0 ? (
+              <div className="w-full flex flex-col items-center">
+                
+                {/* Horizontal Branch Bar linking L1 Nodes */}
+                <div className="relative w-3/4 flex justify-between items-center">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-slate-700"></div>
+                </div>
+
+                <div className="w-full grid grid-cols-2 gap-8 pt-4">
+                  {level1Users.map((l1) => {
+                    const directSubDownlines = level2Users.filter((l2) => l2.referred_by === l1.id);
+
+                    return (
+                      <div key={l1.id} className="flex flex-col items-center">
+                        
+                        {/* L1 Card */}
+                        <div className="bg-[#121620] border border-slate-700 px-4 py-3 rounded-2xl text-center shadow-lg w-60 space-y-1 relative z-10">
+                          <span className="text-[9px] uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                            Level 1
+                          </span>
+                          <p className="text-xs font-bold text-white truncate mt-1">{l1.full_name || 'Agent'}</p>
+                          <p className="text-[10px] text-slate-400 truncate">{l1.email}</p>
+                          <code className="text-[9px] font-mono text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 inline-block mt-1">
+                            {l1.referral_code}
+                          </code>
+                        </div>
+
+                        {/* Connector down to L2 */}
+                        {directSubDownlines.length > 0 && (
+                          <div className="w-0.5 h-6 bg-slate-700"></div>
+                        )}
+
+                        {/* LEVEL 2: SUB-REFERRALS */}
+                        {directSubDownlines.length > 0 && (
+                          <div className="w-full flex flex-col items-center">
+                            {/* Horizontal Line for L2 Sub-branch if multiple */}
+                            {directSubDownlines.length > 1 && (
+                              <div className="w-1/2 h-0.5 bg-slate-800 my-1"></div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full pt-1">
+                              {directSubDownlines.map((l2) => (
+                                <div key={l2.id} className="bg-[#121620]/90 border border-slate-800/80 p-2 rounded-xl text-center shadow-sm">
+                                  <span className="text-[8px] uppercase font-bold text-slate-500 block">L2 Leg</span>
+                                  <p className="text-[11px] font-semibold text-slate-200 truncate">{l2.full_name || 'Sub-Agent'}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                      </div>
+                    );
+                  })}
+                </div>
+
+              </div>
+            ) : (
+              <div className="text-center py-6 space-y-2">
+                <p className="text-xs text-slate-400 font-semibold">No direct team members found yet.</p>
+                <p className="text-[11px] text-slate-500 max-w-sm mx-auto">Share your sponsor referral link above to start building your 2-leg downline network.</p>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+
+      {/* Log Sale Form */}
+      <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-6">
+        <h2 className="text-xl font-bold text-white">Log New Sale for Approval</h2>
+
+        <form onSubmit={handleLogSale} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-2">Sale Amount (₦)</label>
+            <input
+              type="number"
+              step="0.01"
+              placeholder="e.g. 10000000"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full bg-[#0B0E14] border border-slate-800 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-[#E05244] transition"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-2">Description</label>
+            <textarea
+              placeholder="Property description or transaction details"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full bg-[#0B0E14] border border-slate-800 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-[#E05244] transition resize-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#E05244] hover:bg-[#c94336] text-white font-bold py-4 rounded-xl text-sm transition"
+          >
+            {loading ? 'Logging Sale...' : 'Log Sale'}
+          </button>
+        </form>
+      </div>
+
+      {/* RECENT LOGGED SALES HISTORY */}
+      <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-6">
+        <div className="flex justify-between items-center border-b border-slate-800/80 pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-white">My Logged Sales History</h2>
+            <p className="text-xs text-slate-400">Track all property sales you have submitted for admin review.</p>
+          </div>
+          <span className="text-xs font-mono bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1 rounded-full">
+            Total Logged: {userSales.length}
+          </span>
+        </div>
+
+        <div className="divide-y divide-slate-800/80">
+          {userSales.length > 0 ? (
+            userSales.map((sale) => (
+              <div key={sale.id} className="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-white">{sale.description || 'Property Sale'}</p>
+                  <p className="text-xs font-mono text-emerald-400 font-bold">₦{Number(sale.amount).toLocaleString()}</p>
+                  <p className="text-[10px] text-slate-500">Logged on {new Date(sale.created_at).toLocaleDateString()}</p>
+                </div>
+
+                <div>
+                  {sale.status === 'approved' && (
+                    <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold px-3 py-1 rounded-full">
+                      ✓ Approved
+                    </span>
+                  )}
+                  {sale.status === 'pending' && (
+                    <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold px-3 py-1 rounded-full">
+                      ⏳ Pending Approval
+                    </span>
+                  )}
+                  {sale.status === 'rejected' && (
+                    <span className="text-xs bg-rose-500/10 text-rose-400 border border-rose-500/30 font-bold px-3 py-1 rounded-full">
+                      ✕ Rejected
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-slate-500 py-6 text-center">You have not submitted any sales for approval yet.</p>
+          )}
+        </div>
+      </div>
+
       {/* Profile Settings Form */}
       <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-6">
         <h2 className="text-xl font-bold text-white">Account & Payout Settings</h2>
@@ -343,45 +551,6 @@ export default function UserDashboard() {
               {savingProfile ? 'Saving Details...' : 'Save Account Settings'}
             </button>
           </div>
-        </form>
-      </div>
-
-      {/* Log Sale Form */}
-      <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-6">
-        <h2 className="text-xl font-bold text-white">Log New Sale for Approval</h2>
-
-        <form onSubmit={handleLogSale} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">Sale Amount (₦)</label>
-            <input
-              type="number"
-              step="0.01"
-              placeholder="e.g. 10000000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-[#0B0E14] border border-slate-800 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-[#E05244] transition"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">Description</label>
-            <textarea
-              placeholder="Property description or transaction details"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full bg-[#0B0E14] border border-slate-800 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-[#E05244] transition resize-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#E05244] hover:bg-[#c94336] text-white font-bold py-4 rounded-xl text-sm transition"
-          >
-            {loading ? 'Logging Sale...' : 'Log Sale'}
-          </button>
         </form>
       </div>
     </div>

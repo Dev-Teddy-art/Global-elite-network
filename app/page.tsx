@@ -26,95 +26,97 @@ export default function Home() {
   ];
 
   return (
-    <div className="space-y-24 py-6">
-      
+    <div className="space-y-24">
+
       {/* HERO SECTION */}
-      <section className="min-h-[80vh] flex flex-col justify-center">
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          
-          {/* Left Column: Headline & Call To Action */}
+      <section className="py-4">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+          {/* Left Column: Headline & Action Buttons */}
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 bg-[#121620] border border-slate-800 px-4 py-1.5 rounded-full text-xs font-semibold text-[#E05244] uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-[#E05244] animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 bg-[#121620] border border-slate-800 px-4 py-1.5 rounded-full text-xs font-semibold text-[#FF6B4A] uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-[#FF6B4A] animate-pulse"></span>
               Become An Elite Today
             </div>
 
-            <h1 className="text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
               Redefine <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-300 to-slate-500">
                 Upscale
               </span> <br />
-              <span className="text-[#E05244]">Mastery</span>
+              <span className="text-[#FF6B4A]">Mastery</span>
             </h1>
 
-            <p className="text-slate-400 text-base max-w-lg leading-relaxed">
+            <p className="text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed">
               Join the Global Sales Elite platform. Earn multi-tier commissions in Naira (₦), and track your global downline sales in real-time.
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
               <Link
                 href="/signup"
-                className="bg-[#E05244] hover:bg-[#c94336] text-white font-bold px-8 py-4 rounded-xl text-sm transition shadow-xl shadow-[#E05244]/25 flex items-center gap-2"
+                className="bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold px-8 py-4 rounded-2xl text-sm transition shadow-xl shadow-[#FF6B4A]/25 flex items-center justify-center gap-2"
               >
-                Join the Network
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                JOIN THE NETWORK &rarr;
               </Link>
-              
+
               <Link
                 href="/login"
-                className="bg-[#121620] hover:bg-slate-800 text-slate-300 hover:text-white font-semibold px-6 py-4 rounded-xl text-sm border border-slate-800 transition"
+                className="bg-[#121620] hover:bg-slate-800 text-slate-300 hover:text-white font-semibold px-8 py-4 rounded-2xl text-sm border border-slate-800/80 text-center transition"
               >
-                Sign In
+                SIGN IN
               </Link>
             </div>
           </div>
 
-          {/* Right Column: Live Referral Tree Graphic Card */}
-          <div className="bg-[#121620]/80 backdrop-blur-md p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-6">
-            <div className="flex justify-between items-center border-b border-slate-800/80 pb-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-300 uppercase tracking-wider">
-                <svg className="w-4 h-4 text-[#E05244]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                Live Network Preview
-              </div>
-              <div className="flex gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#E05244]"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          {/* Right Column: Visual Showcase Cards */}
+          <div className="space-y-6">
+            {/* Sleek Modern Corporate Image Card */}
+            <div className="relative rounded-3xl overflow-hidden border border-slate-800/80 shadow-2xl bg-[#121620] group h-64 sm:h-72">
+              <img
+                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80"
+                alt="Global Corporate Leadership"
+                className="w-full h-full object-cover object-center opacity-70 group-hover:scale-105 transition duration-700 ease-out"
+              />
+              {/* Dark Gradient Overlay for sleek feel */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E14] via-[#0B0E14]/40 to-transparent"></div>
+              
+              <div className="absolute bottom-5 left-5 right-5 bg-[#121620]/90 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                  <span className="text-[#FF6B4A]">🛡️</span> ELITE LEADERSHIP
+                </div>
+                <p className="text-[11px] text-slate-400">Mastering the global sales landscape with precision.</p>
               </div>
             </div>
 
-            {/* Visual Network Graphic */}
-            <div className="py-8 flex flex-col items-center justify-center space-y-6">
-              <div className="px-5 py-2.5 bg-[#0B0E14] border border-slate-700 rounded-xl font-bold text-xs text-white shadow-lg">
-                YOU (Agent)
-              </div>
-
-              <div className="w-px h-8 bg-gradient-to-b from-slate-700 to-[#E05244]"></div>
-
-              <div className="grid grid-cols-2 gap-8 w-full max-w-xs text-center">
-                <div className="p-3 bg-[#0B0E14] border border-slate-800 rounded-xl text-xs font-semibold text-slate-400">
-                  Level 1 Referral
+            {/* Live Referral Network Preview Graphic */}
+            <div className="bg-[#121620]/90 backdrop-blur-md p-6 rounded-3xl border border-slate-800/80 shadow-2xl space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-800/80 pb-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  NETWORK INTELLIGENCE
                 </div>
-                <div className="p-3 bg-[#0B0E14] border border-[#E05244]/50 rounded-xl text-xs font-semibold text-[#E05244] shadow-md shadow-[#E05244]/10 relative">
-                  <span className="absolute -top-2 -right-2 bg-[#E05244] text-[9px] font-bold px-1.5 py-0.5 rounded text-white uppercase">New</span>
-                  Level 2 Referral
-                </div>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded font-mono font-bold">
+                  LIVE
+                </span>
               </div>
-            </div>
 
-            {/* Network Metrics Bar */}
-            <div className="grid grid-cols-2 gap-4 border-t border-slate-800/80 pt-4 text-center">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500">Tier Commissions</p>
-                <p className="text-sm font-bold text-emerald-400 mt-1">Multi-Level Payouts</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500">Currency Support</p>
-                <p className="text-sm font-bold text-indigo-400 mt-1">Naira (₦)</p>
+              {/* Graphic Diagram */}
+              <div className="py-2 flex flex-col items-center justify-center space-y-3">
+                <div className="px-5 py-1.5 bg-[#0B0E14] border border-slate-700 rounded-xl font-bold text-xs text-slate-200 shadow-md">
+                  YOU (Agent)
+                </div>
+
+                <div className="w-px h-5 bg-gradient-to-b from-slate-700 to-[#FF6B4A]"></div>
+
+                <div className="grid grid-cols-2 gap-4 w-full max-w-xs text-center">
+                  <div className="p-2 bg-[#0B0E14] border border-slate-800 rounded-xl text-xs font-semibold text-slate-400">
+                    L1 Referral
+                  </div>
+                  <div className="p-2 bg-[#0B0E14] border border-[#FF6B4A]/50 rounded-xl text-xs font-semibold text-[#FF6B4A] relative">
+                    <span className="absolute -top-2 -right-1 bg-[#FF6B4A] text-[8px] font-bold px-1 py-0.2 rounded text-white uppercase">New</span>
+                    L2 Referral
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -125,7 +127,7 @@ export default function Home() {
       {/* SECTION 1: Engineered for Growth */}
       <section className="space-y-12 text-center pt-8 border-t border-slate-900">
         <div className="space-y-4 max-w-2xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">
             Engineered for Growth
           </h2>
           <p className="text-slate-400 text-sm md:text-base leading-relaxed">
@@ -136,7 +138,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
           {/* Card 1 */}
           <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-4">
-            <div className="w-12 h-12 bg-[#E05244]/10 rounded-2xl border border-[#E05244]/30 flex items-center justify-center text-[#E05244]">
+            <div className="w-12 h-12 bg-[#FF6B4A]/10 rounded-2xl border border-[#FF6B4A]/30 flex items-center justify-center text-[#FF6B4A]">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -149,7 +151,7 @@ export default function Home() {
 
           {/* Card 2 */}
           <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-4">
-            <div className="w-12 h-12 bg-[#E05244]/10 rounded-2xl border border-[#E05244]/30 flex items-center justify-center text-[#E05244]">
+            <div className="w-12 h-12 bg-[#FF6B4A]/10 rounded-2xl border border-[#FF6B4A]/30 flex items-center justify-center text-[#FF6B4A]">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -162,7 +164,7 @@ export default function Home() {
 
           {/* Card 3 */}
           <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-4">
-            <div className="w-12 h-12 bg-[#E05244]/10 rounded-2xl border border-[#E05244]/30 flex items-center justify-center text-[#E05244]">
+            <div className="w-12 h-12 bg-[#FF6B4A]/10 rounded-2xl border border-[#FF6B4A]/30 flex items-center justify-center text-[#FF6B4A]">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -190,7 +192,7 @@ export default function Home() {
           {/* Plan 1 */}
           <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl flex flex-col justify-between space-y-6">
             <div className="space-y-2">
-              <span className="text-4xl font-black text-[#E05244]">15%</span>
+              <span className="text-4xl font-black text-[#FF6B4A]">15%</span>
               <h3 className="text-base font-bold text-white">Direct Referral</h3>
               <p className="text-xs text-slate-400 leading-relaxed pt-2">
                 Earn 15% immediately for anyone who signs up directly using your link.
@@ -213,7 +215,7 @@ export default function Home() {
           <div className="bg-[#121620]/80 p-8 rounded-3xl border border-slate-800/80 shadow-2xl flex flex-col justify-between space-y-6 relative overflow-hidden">
             <div className="absolute top-3 right-3 text-amber-400 text-xs">👑</div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-black text-white pt-2">Grow a power Team</h3>
+              <h3 className="text-2xl font-black text-white pt-2">Grow a Power Team</h3>
               <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block">(Everyone)</span>
               <p className="text-xs text-slate-400 leading-relaxed pt-2">
                 Stand a chance to grow, learn, and maximize your potential as a profitable Realtor. Cheers Global Elite!
@@ -279,7 +281,7 @@ export default function Home() {
               <div key={idx} className="bg-[#121620]/80 border border-slate-800/80 rounded-2xl overflow-hidden transition">
                 <button
                   onClick={() => toggleFaq(idx)}
-                  className="w-full p-5 text-left flex justify-between items-center text-sm font-bold text-white hover:text-[#E05244] transition"
+                  className="w-full p-5 text-left flex justify-between items-center text-sm font-bold text-white hover:text-[#FF6B4A] transition"
                 >
                   <span>{faq.q}</span>
                   <span className="text-slate-400 text-xs">{openFaq === idx ? '▲' : '▼'}</span>
