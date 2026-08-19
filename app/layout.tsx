@@ -2,11 +2,11 @@ import './globals.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import type { Metadata, Viewport } from 'next';
 
 export const viewport: Viewport = {
   themeColor: '#0B0E14',
-  colorScheme: 'dark',
 };
 
 export const metadata: Metadata = {
@@ -19,69 +19,58 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark bg-[#0B0E14]">
-      <body className="bg-[#0B0E14] text-white min-h-screen flex flex-col justify-between selection:bg-[#E05244] selection:text-white overflow-x-hidden">
-        {/* Navigation Bar */}
-        <Navbar />
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-slate-50 dark:bg-[#0B0E14] text-slate-900 dark:text-white min-h-screen flex flex-col justify-between selection:bg-[#FF6B4A] selection:text-white overflow-x-hidden transition-colors duration-300">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <Navbar />
 
-        {/* Main Page Content - Added overflow-x-hidden and responsive horizontal padding */}
-        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-8 overflow-x-hidden">
-          {children}
-        </main>
+          <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-8 overflow-x-hidden">
+            {children}
+          </main>
 
-        {/* Global Brand Footer */}
-        <footer className="border-t border-slate-900 bg-[#080A0F] pt-12 pb-8 px-4 sm:px-6 mt-16">
-          <div className="max-w-6xl mx-auto space-y-10">
-            
-            {/* Top Footer Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-              
-              {/* Brand Info & Tagline */}
-              <div className="space-y-4 max-w-xs">
-                <Image 
-                  src="/logo1.png" 
-                  alt="Global Sales Elite Logo" 
-                  width={140} 
-                  height={35} 
-                  className="w-auto h-auto object-contain"
-                />
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Empowering the next generation of sales professionals with transparent, high-yield network marketing infrastructure.
-                </p>
-              </div>
-
-              {/* Navigation Columns */}
-              <div className="flex gap-16 text-xs">
-                {/* Platform Links */}
-                <div className="space-y-3">
-                  <h4 className="font-bold text-white tracking-wide">Platform</h4>
-                  <ul className="space-y-2 text-slate-400">
-                    <li><Link href="/" className="hover:text-white transition">How it works</Link></li>
-                    <li><Link href="/" className="hover:text-white transition">Compensation Plan</Link></li>
-                    <li><Link href="/" className="hover:text-white transition">Matrix Mechanics</Link></li>
-                  </ul>
+          <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#080A0F] pt-12 pb-8 px-4 sm:px-6 mt-16 transition-colors duration-300">
+            <div className="max-w-6xl mx-auto space-y-10">
+              <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                <div className="space-y-4 max-w-xs">
+                  <Image 
+                    src="/logo1.png" 
+                    alt="Global Sales Elite Logo" 
+                    width={140} 
+                    height={35} 
+                    className="w-auto h-auto object-contain"
+                  />
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Empowering the next generation of sales professionals with transparent, high-yield network marketing infrastructure.
+                  </p>
                 </div>
 
-                {/* Company Links */}
-                <div className="space-y-3">
-                  <h4 className="font-bold text-white tracking-wide">Company</h4>
-                  <ul className="space-y-2 text-slate-400">
-                    <li><Link href="/" className="hover:text-white transition">About</Link></li>
-                    <li><Link href="/" className="hover:text-white transition">Terms</Link></li>
-                    <li><Link href="/" className="hover:text-white transition">Privacy</Link></li>
-                  </ul>
+                <div className="flex gap-16 text-xs">
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-slate-900 dark:text-white tracking-wide">Platform</h4>
+                    <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+                      <li><Link href="/" className="hover:text-[#FF6B4A] transition">How it works</Link></li>
+                      <li><Link href="/" className="hover:text-[#FF6B4A] transition">Compensation Plan</Link></li>
+                      <li><Link href="/" className="hover:text-[#FF6B4A] transition">Matrix Mechanics</Link></li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-slate-900 dark:text-white tracking-wide">Company</h4>
+                    <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+                      <li><Link href="/" className="hover:text-[#FF6B4A] transition">About</Link></li>
+                      <li><Link href="/" className="hover:text-[#FF6B4A] transition">Terms</Link></li>
+                      <li><Link href="/" className="hover:text-[#FF6B4A] transition">Privacy</Link></li>
+                    </ul>
+                  </div>
                 </div>
               </div>
 
+              <div className="border-t border-slate-200 dark:border-slate-900/80 pt-6 text-center text-xs text-slate-500">
+                © {new Date().getFullYear()} Global Sales Elite. All rights reserved.
+              </div>
             </div>
-
-            {/* Bottom Copyright Bar */}
-            <div className="border-t border-slate-900/80 pt-6 text-center text-xs text-slate-500">
-              © {new Date().getFullYear()} Global Sales Elite. All rights reserved.
-            </div>
-
-          </div>
-        </footer>
+          </footer>
+        </ThemeProvider>
       </body>
     </html>
   );
