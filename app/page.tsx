@@ -4,314 +4,406 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 export default function Home() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  // Commission Interactive Matrix Calculator
+  const [dealVolume, setDealVolume] = useState(20000000); // ₦20M
+  const [downlineAgents, setDownlineAgents] = useState(4); // 4 team closers
 
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
+  const directCommission = dealVolume * 0.15;
+  const downlineCommission = downlineAgents * (dealVolume * 0.03);
+  const totalProjected = directCommission + downlineCommission;
+
+  // FAQ State
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const toggleFaq = (idx: number) => setOpenFaq(openFaq === idx ? null : idx);
 
   const faqs = [
     {
-      q: 'How do I get paid?',
-      a: 'Commissions are credited to your account instantly when a sale is approved by an admin. You can request direct payouts to your registered local bank account.',
+      q: 'How does the 15% direct & 3% downline override work?',
+      a: 'Whenever you close a verified real estate deal, you earn 15% direct commission. Whenever an agent in your direct Level 1 downline closes a deal, you earn a 3% team override automatically.',
     },
     {
-      q: 'What happens if I reach Level 2?',
-      a: 'You earn an additional 3% commission automatically on all direct sales completed by agents in your Level 1 downline network.',
+      q: 'Why is there a ₦5,000 onboarding registration fee?',
+      a: 'The one-time ₦5,000 fee grants instant access to verified luxury properties, downline matrix lineage tracking, promotional sales assets, and prioritized GTBank clearance.',
     },
     {
-      q: 'How does the referral spillover work?',
-      a: 'Our dual-leg structure automatically places additional recruits under your active downline team members, helping your entire network grow faster.',
+      q: 'What is the 2-Leg Binary Spillover mechanism?',
+      a: 'Your frontline is strictly 2 legs (Left & Right). Every additional agent you recruit cascades down into your team’s empty positions, building volume and earnings for your entire network.',
+    },
+    {
+      q: 'How are commissions settled?',
+      a: 'Commissions are credited upon transaction clearance and settled directly to your registered Nigerian bank account with zero platform deduction fees.',
     },
   ];
 
   return (
-    <div className="space-y-28 relative">
+    <div className="space-y-32 relative">
       
-      {/* Background Ambient Glows */}
-      <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[350px] sm:w-[600px] h-[300px] bg-[#FF6B4A]/15 dark:bg-[#FF6B4A]/10 blur-[130px] rounded-full pointer-events-none -z-10"></div>
+      {/* BACKGROUND SCI-FI GLOW & GRID PATTERN */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#FF6B4A]/15 dark:bg-[#FF6B4A]/10 blur-[150px] rounded-full pointer-events-none -z-10"></div>
+      <div className="absolute top-[900px] -right-20 w-[450px] h-[450px] bg-emerald-500/10 blur-[160px] rounded-full pointer-events-none -z-10"></div>
 
-      {/* HERO SECTION */}
-      <section className="py-4 sm:py-8">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-
-          {/* Left Column: Headline & CTA */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-[#121620] border border-slate-200 dark:border-slate-800 px-4 py-1.5 rounded-full text-xs font-bold text-[#FF6B4A] uppercase tracking-wider shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-[#FF6B4A] animate-pulse"></span>
-              Become An Elite Today
+      {/* ========================================================= */}
+      {/* 1. HERO: DUAL COLUMN NETWORK ARCHITECTURE */}
+      {/* ========================================================= */}
+      <section className="pt-6 sm:pt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          
+          {/* Left Column: Value Prop & CTA */}
+          <div className="lg:col-span-7 space-y-7 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-4 py-1.5 rounded-full text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm backdrop-blur-md">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B4A] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B4A]"></span>
+              </span>
+              <span>Nigeria&apos;s High-Yield Realtor Binary Network</span>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight">
-              Redefine <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:via-slate-200 dark:to-slate-400">
-                Upscale
+            <h1 className="text-4xl sm:text-6xl xl:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.05]">
+              Redefine. <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B4A] via-rose-500 to-amber-500">
+                Upscale.
               </span> <br />
-              <span className="text-[#FF6B4A]">Mastery</span>
+              Mastery.
             </h1>
 
-            <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed">
-              Join the Global Sales Elite platform. Earn multi-tier commissions in Naira (₦), and track your global downline sales in real-time.
+            <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
+              Stop selling real estate alone. Join an elite syndication offering <strong className="text-slate-900 dark:text-white font-bold">15% direct commission</strong> plus continuous <strong className="text-emerald-500 font-bold">3% team overrides</strong> through our high-velocity binary spillover matrix.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <Link
                 href="/signup"
-                className="bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold px-8 py-4 rounded-2xl text-sm transition shadow-xl shadow-[#FF6B4A]/25 flex items-center justify-center gap-2 group"
+                className="w-full sm:w-auto bg-[#FF6B4A] hover:bg-[#e05638] text-white font-black px-8 py-4 rounded-2xl text-xs uppercase tracking-wider transition duration-300 shadow-xl shadow-[#FF6B4A]/25 flex items-center justify-center gap-2 group"
               >
-                JOIN THE NETWORK 
+                Join Network (₦5,000)
                 <span className="group-hover:translate-x-1 transition duration-200">&rarr;</span>
               </Link>
-
               <Link
                 href="/login"
-                className="bg-white dark:bg-[#121620] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold px-8 py-4 rounded-2xl text-sm border border-slate-200 dark:border-slate-800 text-center transition shadow-sm"
+                className="w-full sm:w-auto bg-white/80 dark:bg-[#121620]/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-8 py-4 rounded-2xl text-xs uppercase tracking-wider border border-slate-200 dark:border-slate-800 text-center transition backdrop-blur-md"
               >
-                SIGN IN
+                Agent Portal
               </Link>
             </div>
 
-            {/* Quick Metrics Bar */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-200 dark:border-slate-800/80">
+            {/* Quick Metrics Strip */}
+            <div className="pt-8 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-3 gap-4">
               <div>
-                <p className="text-2xl font-black text-slate-900 dark:text-white">15%</p>
-                <p className="text-xs text-slate-500 font-medium">Direct Sales</p>
+                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white block">15%</span>
+                <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Direct Closer</span>
               </div>
               <div>
-                <p className="text-2xl font-black text-slate-900 dark:text-white">3%</p>
-                <p className="text-xs text-slate-500 font-medium">L2 Spillover</p>
+                <span className="text-2xl sm:text-3xl font-black text-emerald-500 block">3%</span>
+                <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">L2 Overrides</span>
               </div>
               <div>
-                <p className="text-2xl font-black text-[#FF6B4A]">₦ Instant</p>
-                <p className="text-xs text-slate-500 font-medium">Local Payouts</p>
+                <span className="text-2xl sm:text-3xl font-black text-[#FF6B4A] block">Instant</span>
+                <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">GTB Payouts</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Visual Showcase Card */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Corporate Showcase Card */}
-            <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800/80 shadow-2xl bg-white dark:bg-[#121620] group h-64 sm:h-72">
-              <img
-                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80"
-                alt="Global Corporate Leadership"
-                className="w-full h-full object-cover object-center opacity-85 dark:opacity-70 group-hover:scale-105 transition duration-700 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+          {/* Right Column: Live Matrix Interactive Terminal */}
+          <div className="lg:col-span-5">
+            <div className="relative bg-white/90 dark:bg-[#121620]/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-xl space-y-6">
               
-              <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-[#121620]/90 backdrop-blur-md p-4 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-1 shadow-lg">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                  <span className="text-[#FF6B4A]">🛡️</span> ELITE LEADERSHIP
+              {/* Header Bar */}
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-amber-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+                  <span className="text-[10px] font-mono font-bold text-slate-400 ml-2 uppercase">Matrix Engine v2.4</span>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400">Mastering the global sales landscape with precision.</p>
-              </div>
-            </div>
-
-            {/* Live Network Graphic */}
-            <div className="bg-white dark:bg-[#121620]/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  NETWORK INTELLIGENCE
-                </div>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded font-mono font-bold">
-                  LIVE
+                <span className="text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  LIVE SYNC
                 </span>
               </div>
 
-              <div className="py-2 flex flex-col items-center justify-center space-y-3">
-                <div className="px-5 py-1.5 bg-slate-100 dark:bg-[#0B0E14] border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs text-slate-800 dark:text-slate-200 shadow-sm">
-                  YOU (Agent)
+              {/* Graphical Binary Tree */}
+              <div className="flex flex-col items-center py-2">
+                {/* ROOT USER */}
+                <div className="bg-slate-50 dark:bg-[#0B0E14] border-2 border-[#FF6B4A] px-5 py-2.5 rounded-2xl text-center shadow-lg w-52 relative">
+                  <span className="text-[8px] font-mono font-bold uppercase text-[#FF6B4A] tracking-wider block">YOU (Sponsor)</span>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">Active Root Position</p>
+                  <span className="absolute -top-2 -right-2 bg-[#FF6B4A] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">15%</span>
                 </div>
 
-                <div className="w-px h-5 bg-gradient-to-b from-slate-400 to-[#FF6B4A]"></div>
+                <div className="w-0.5 h-6 bg-gradient-to-b from-[#FF6B4A] to-slate-400 dark:to-slate-600"></div>
 
-                <div className="grid grid-cols-2 gap-4 w-full max-w-xs text-center">
-                  <div className="p-2 bg-slate-50 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400">
-                    L1 Referral
+                {/* HORIZONTAL BAR */}
+                <div className="w-4/5 h-0.5 bg-slate-300 dark:bg-slate-700 relative flex justify-between items-center">
+                  <div className="w-1.5 h-1.5 bg-[#FF6B4A] rounded-full -top-0.5 absolute left-0"></div>
+                  <div className="w-1.5 h-1.5 bg-[#FF6B4A] rounded-full -top-0.5 absolute right-0"></div>
+                </div>
+
+                {/* LEVEL 1 LEGS */}
+                <div className="w-full grid grid-cols-2 gap-4 pt-3">
+                  <div className="bg-slate-50 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800 p-3 rounded-2xl text-center space-y-1 shadow-sm">
+                    <span className="text-[8px] font-bold text-emerald-500 uppercase bg-emerald-500/10 px-1.5 py-0.5 rounded">Left Leg</span>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">Direct Agent</p>
+                    <p className="text-[10px] font-mono text-emerald-500 font-semibold">+3% Override</p>
                   </div>
-                  <div className="p-2 bg-slate-50 dark:bg-[#0B0E14] border border-[#FF6B4A]/40 rounded-xl text-xs font-semibold text-[#FF6B4A] relative">
-                    <span className="absolute -top-2 -right-1 bg-[#FF6B4A] text-[8px] font-bold px-1 py-0.2 rounded text-white uppercase shadow-sm">New</span>
-                    L2 Referral
+
+                  <div className="bg-slate-50 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800 p-3 rounded-2xl text-center space-y-1 shadow-sm">
+                    <span className="text-[8px] font-bold text-emerald-500 uppercase bg-emerald-500/10 px-1.5 py-0.5 rounded">Right Leg</span>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">Direct Agent</p>
+                    <p className="text-[10px] font-mono text-emerald-500 font-semibold">+3% Override</p>
                   </div>
+                </div>
+
+                <div className="mt-4 w-full bg-slate-100 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Auto Spillover:</span>
+                  <span className="font-mono font-bold text-[#FF6B4A]">ENABLED & ACTIVE</span>
                 </div>
               </div>
+
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* SECTION 1: Engineered for Growth */}
-      <section className="space-y-12 text-center pt-8 border-t border-slate-200 dark:border-slate-900">
-        <div className="space-y-4 max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-            Engineered for Growth
+      {/* ========================================================= */}
+      {/* 2. BENTO GRID: HIGH IMPACT NETWORK MARKETING ADVANTAGES */}
+      {/* ========================================================= */}
+      <section className="space-y-12">
+        <div className="text-center space-y-3 max-w-2xl mx-auto">
+          <span className="text-xs font-bold text-[#FF6B4A] uppercase tracking-widest">Syndicate Advantage</span>
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+            Engineered For Team Scale
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed">
-            Our system is designed to reward active builders while ensuring sustainable payouts through advanced matrix mechanics.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            A network structure designed so everyone in your organization wins when high-ticket deals close.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-          {/* Card 1 */}
-          <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl space-y-4 hover:border-[#FF6B4A]/50 transition duration-300">
-            <div className="w-12 h-12 bg-[#FF6B4A]/10 rounded-2xl border border-[#FF6B4A]/30 flex items-center justify-center text-[#FF6B4A]">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Card 1: 15% Direct */}
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800/90 rounded-3xl p-8 space-y-4 shadow-xl hover:border-[#FF6B4A]/40 transition duration-300 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#FF6B4A]/10 text-[#FF6B4A] flex items-center justify-center text-xl font-bold font-mono">
+                15%
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">Direct Closer Bounty</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Earn 15% upfront commission on every single real estate transaction you close directly through your portal.
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">2-Leg Spillover Matrix</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Every node has exactly two spots. Additional recruits automatically spill over to the next available spot in your downline, helping your team scale rapidly.
-            </p>
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono text-[#FF6B4A] font-bold">
+              ₦30,000,000 Sale = ₦4,500,000 Payout
+            </div>
           </div>
 
-          {/* Card 2 */}
-          <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl space-y-4 hover:border-[#FF6B4A]/50 transition duration-300">
-            <div className="w-12 h-12 bg-[#FF6B4A]/10 rounded-2xl border border-[#FF6B4A]/30 flex items-center justify-center text-[#FF6B4A]">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          {/* Card 2: 3% Override */}
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800/90 rounded-3xl p-8 space-y-4 shadow-xl hover:border-emerald-500/40 transition duration-300 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xl font-bold font-mono">
+                3%
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">Level 2 Team Overrides</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Build a frontline of active agents. Every time they close a deal, 3% overrides hit your account automatically.
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Tiered Commissions</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Earn 15% on direct referrals, and 3% on second level. A robust compensation plan built for massive scaling.
-            </p>
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono text-emerald-500 font-bold">
+              5 Team Closures = ₦4,500,000 Overrides
+            </div>
           </div>
 
-          {/* Card 3 */}
-          <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl space-y-4 hover:border-[#FF6B4A]/50 transition duration-300">
-            <div className="w-12 h-12 bg-[#FF6B4A]/10 rounded-2xl border border-[#FF6B4A]/30 flex items-center justify-center text-[#FF6B4A]">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          {/* Card 3: Instant GTBank */}
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800/90 rounded-3xl p-8 space-y-4 shadow-xl hover:border-amber-500/40 transition duration-300 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl font-bold font-mono">
+                GTB
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">Direct Nigerian Payouts</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Settlements flow directly into your registered Nigerian bank account upon transaction verification.
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Instant Payout Approvals</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Direct integration with local banks allows for rapid commission clearance. Track pending approvals directly from your dashboard.
-            </p>
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono text-amber-500 font-bold">
+              Zero Delays • Zero Reductions
+            </div>
           </div>
+
         </div>
       </section>
 
-      {/* SECTION 2: Unrivaled Compensation Plan */}
-      <section className="space-y-12 text-center pt-8 border-t border-slate-200 dark:border-slate-900">
-        <div className="space-y-4 max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            Unrivaled Compensation Plan
+      {/* ========================================================= */}
+      {/* 3. INTERACTIVE MATRIX COMMISSION CALCULATOR */}
+      {/* ========================================================= */}
+      <section className="bg-white/90 dark:bg-[#121620]/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-12 shadow-2xl backdrop-blur-xl space-y-10">
+        <div className="text-center space-y-2 max-w-xl mx-auto">
+          <span className="text-xs font-bold text-[#FF6B4A] uppercase tracking-widest">Earnings Simulator</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
+            Simulate Your Network Cashflow
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-            We built our payouts to maximize earning potential for both direct effort and team building.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Adjust deal volume and team size to calculate monthly cash distributions.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          {/* Plan 1 */}
-          <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl flex flex-col justify-between space-y-6">
-            <div className="space-y-2">
-              <span className="text-5xl font-black text-[#FF6B4A]">15%</span>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Direct Referral</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-2">
-                Earn 15% immediately for anyone who signs up directly using your link.
-              </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          
+          {/* Sliders */}
+          <div className="lg:col-span-7 space-y-7">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-800 dark:text-slate-200">
+                <span>Average Property Value Closed:</span>
+                <span className="font-mono text-[#FF6B4A] text-base">₦{dealVolume.toLocaleString()}</span>
+              </div>
+              <input
+                type="range"
+                min="5000000"
+                max="100000000"
+                step="5000000"
+                value={dealVolume}
+                onChange={(e) => setDealVolume(Number(e.target.value))}
+                className="w-full accent-[#FF6B4A] cursor-pointer h-2 bg-slate-200 dark:bg-slate-800 rounded-lg"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                <span>₦5,000,000</span>
+                <span>₦100,000,000</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-800 dark:text-slate-200">
+                <span>Active Closers in Your Level 1 Downline:</span>
+                <span className="font-mono text-emerald-500 text-base">{downlineAgents} Agents</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="15"
+                step="1"
+                value={downlineAgents}
+                onChange={(e) => setDownlineAgents(Number(e.target.value))}
+                className="w-full accent-emerald-500 cursor-pointer h-2 bg-slate-200 dark:bg-slate-800 rounded-lg"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                <span>0 Closers</span>
+                <span>15 Closers</span>
+              </div>
             </div>
           </div>
 
-          {/* Plan 2 */}
-          <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl flex flex-col justify-between space-y-6">
-            <div className="space-y-2">
-              <span className="text-5xl font-black text-slate-900 dark:text-white">3%</span>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Indirect Level 2</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-2">
-                Earn 3% for the direct referrals made by your Level 1 network.
+          {/* Result Card */}
+          <div className="lg:col-span-5 bg-slate-50 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4 shadow-inner">
+            <div className="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">15% Direct Sale:</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">₦{directCommission.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">3% Downline Overrides:</span>
+                <span className="font-mono font-bold text-emerald-500">₦{downlineCommission.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Estimated Total Earnings</span>
+              <p className="text-3xl sm:text-4xl font-black text-[#FF6B4A] font-mono mt-1">
+                ₦{totalProjected.toLocaleString()}
               </p>
             </div>
+
+            <Link
+              href="/signup"
+              className="block w-full text-center bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-[#FF6B4A]/25 mt-2"
+            >
+              Activate Your Agent Account &rarr;
+            </Link>
           </div>
 
-          {/* Plan 3 */}
-          <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl flex flex-col justify-between space-y-6 relative overflow-hidden">
-            <div className="absolute top-3 right-3 text-amber-500 text-sm">👑</div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white pt-2">Grow a Power Team</h3>
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block">(Everyone)</span>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-2">
-                Stand a chance to grow, learn, and maximize your potential as a profitable Realtor. Cheers Global Elite!
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* SECTION 3: Success Stories & FAQ */}
-      <section className="space-y-16 pt-8 border-t border-slate-200 dark:border-slate-900">
-        {/* Testimonials */}
-        <div className="space-y-12 text-center">
-          <div className="space-y-3 max-w-xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white">Success Stories</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
-              Hear from top earners who are already scaling their network in our global matrix.
+      {/* ========================================================= */}
+      {/* 4. ONBOARDING JOURNEY */}
+      {/* ========================================================= */}
+      <section className="space-y-12 text-center">
+        <div className="space-y-3 max-w-xl mx-auto">
+          <span className="text-xs font-bold text-[#FF6B4A] uppercase tracking-widest">Protocol</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
+            4 Steps To Binary Activation
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+          
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+            <span className="w-8 h-8 rounded-xl bg-[#FF6B4A]/10 text-[#FF6B4A] flex items-center justify-center font-mono font-bold text-sm">
+              01
+            </span>
+            <h4 className="font-black text-sm text-slate-900 dark:text-white">Create Identity</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Enter your credentials and optional sponsor code.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            {/* Story 1 */}
-            <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl space-y-6">
-              <div className="text-amber-400 text-sm">★★★★★</div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">
-                "The 15% direct commission and immediate withdrawals changed the game for my agency. The visual network tree makes it so easy to see where spillover is happening."
-              </p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center text-xs font-bold text-slate-900 dark:text-white">
-                  SO
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Sarah O.</h4>
-                  <p className="text-[10px] text-slate-500">Executive Director</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Story 2 */}
-            <div className="bg-white dark:bg-[#121620]/80 p-8 rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl space-y-6">
-              <div className="text-amber-400 text-sm">★★★★★</div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">
-                "I've built teams in three different systems before, but GSE's dual-leg matrix ensures my team actually benefits from my over-recruiting. Highly recommended."
-              </p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center text-xs font-bold text-slate-900 dark:text-white">
-                  DK
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">David K.</h4>
-                  <p className="text-[10px] text-slate-500">Diamond Rank Earner</p>
-                </div>
-              </div>
-            </div>
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+            <span className="w-8 h-8 rounded-xl bg-[#FF6B4A]/10 text-[#FF6B4A] flex items-center justify-center font-mono font-bold text-sm">
+              02
+            </span>
+            <h4 className="font-black text-sm text-slate-900 dark:text-white">₦5,000 Settlement</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Transfer to GTB (3005320529) and upload proof in 20 mins.
+            </p>
           </div>
+
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+            <span className="w-8 h-8 rounded-xl bg-[#FF6B4A]/10 text-[#FF6B4A] flex items-center justify-center font-mono font-bold text-sm">
+              03
+            </span>
+            <h4 className="font-black text-sm text-slate-900 dark:text-white">Recruit Downline</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Share your sponsor code to expand your Left & Right legs.
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+            <span className="w-8 h-8 rounded-xl bg-[#FF6B4A]/10 text-[#FF6B4A] flex items-center justify-center font-mono font-bold text-sm">
+              04
+            </span>
+            <h4 className="font-black text-sm text-slate-900 dark:text-white">Collect Payouts</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Earn 15% directly and 3% on all sales closed by your downline.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 5. FAQ SECTION */}
+      {/* ========================================================= */}
+      <section className="space-y-8 max-w-3xl mx-auto pt-4">
+        <div className="text-center space-y-2">
+          <span className="text-xs font-bold text-[#FF6B4A] uppercase tracking-widest">Questions</span>
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white">Network FAQ</h2>
         </div>
 
-        {/* FAQ Section */}
-        <div className="space-y-8 max-w-3xl mx-auto pt-8">
-          <h2 className="text-3xl font-black text-slate-900 dark:text-white text-center">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="bg-white dark:bg-[#121620]/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-sm transition">
-                <button
-                  onClick={() => toggleFaq(idx)}
-                  className="w-full p-5 text-left flex justify-between items-center text-sm font-bold text-slate-900 dark:text-white hover:text-[#FF6B4A] dark:hover:text-[#FF6B4A] transition"
-                >
-                  <span>{faq.q}</span>
-                  <span className="text-slate-400 text-xs">{openFaq === idx ? '▲' : '▼'}</span>
-                </button>
-                {openFaq === idx && (
-                  <div className="px-5 pb-5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/40 pt-3">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => (
+            <div key={idx} className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm transition">
+              <button
+                onClick={() => toggleFaq(idx)}
+                className="w-full p-5 text-left flex justify-between items-center text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-[#FF6B4A] dark:hover:text-[#FF6B4A] transition"
+              >
+                <span>{faq.q}</span>
+                <span className="text-slate-400 text-xs">{openFaq === idx ? '▲' : '▼'}</span>
+              </button>
+              {openFaq === idx && (
+                <div className="px-5 pb-5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/40 pt-3">
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </section>
 
