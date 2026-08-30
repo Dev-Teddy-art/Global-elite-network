@@ -53,16 +53,27 @@ export default function UserDashboard() {
       prof = profByEmail;
     }
 
-    // Recover real full name from user metadata if profile table has null or placeholder
+    // Recover real full name from user metadata if profile table has placeholder
     const realFullName =
       prof?.full_name && prof.full_name !== 'Agent'
         ? prof.full_name
         : user.user_metadata?.full_name || 'Agent';
 
     if (prof) {
+      // Auto-generate referral code on the fly if missing/null in the database
+      let activeReferralCode = prof.referral_code;
+      if (!activeReferralCode || activeReferralCode === '...') {
+        activeReferralCode = 'GSE' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        await supabase
+          .from('profiles')
+          .update({ referral_code: activeReferralCode })
+          .eq('id', user.id);
+      }
+
       setProfile({
         ...prof,
         full_name: realFullName,
+        referral_code: activeReferralCode,
       });
       setPhone(prof.phone_number || '');
       setDob(prof.date_of_birth || '');
@@ -101,7 +112,7 @@ export default function UserDashboard() {
       const { data: l1 } = await supabase
         .from('profiles')
         .select('id, full_name, email, referral_code, created_at')
-        .or(`referred_by.eq.${user.id},referred_by.eq.${prof.referral_code}`);
+        .or(`referred_by.eq.${user.id},referred_by.eq.${activeReferralCode}`);
 
       setLevel1Users(l1 || []);
 
@@ -125,11 +136,25 @@ export default function UserDashboard() {
         }
       }
     } else {
-      // If profile record didn't exist, create minimal state so the screen doesn't break
+      // Fallback if profile row is completely missing: create on the fly
+      const fallbackCode = 'GSE' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          full_name: realFullName,
+          role: 'agent',
+          is_approved: true,
+          referral_code: fallbackCode,
+        });
+
       setProfile({
         id: user.id,
         email: user.email,
         full_name: realFullName,
+        referral_code: fallbackCode,
       });
     }
   };
@@ -192,13 +217,11 @@ export default function UserDashboard() {
         account_name: accountName,
       };
 
-      // 1. Update by ID
       const { error: idError } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
 
-      // 2. Fallback update by email if ID not matched
       if (idError && user.email) {
         const { error: emailError } = await supabase
           .from('profiles')
@@ -210,7 +233,6 @@ export default function UserDashboard() {
         throw idError;
       }
 
-      // Update local state smoothly
       setProfile((prev: any) => ({
         ...(prev || {}),
         ...updates,
@@ -262,7 +284,7 @@ export default function UserDashboard() {
   };
 
   const copyShareLink = () => {
-    if (!profile?.referral_code) return;
+    if (!profile?.referral_code || profile.referral_code === '...') return;
     const shareUrl = `${window.location.origin}/signup?ref=${profile.referral_code}`;
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
@@ -300,7 +322,8 @@ export default function UserDashboard() {
               </code>
               <button
                 onClick={copyShareLink}
-                className="bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold text-xs px-4 py-2 rounded-xl transition"
+                disabled={!profile?.referral_code || profile?.referral_code === '...'}
+                className="bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold text-xs px-4 py-2 rounded-xl transition disabled:opacity-50"
               >
                 {copied ? 'Copied!' : 'Copy Link'}
               </button>
