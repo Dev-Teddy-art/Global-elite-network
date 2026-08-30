@@ -18,42 +18,54 @@ export default function LoginPage() {
     setErrorMsg('');
 
     try {
-      // 1. Authenticate with Supabase
+      const cleanEmail = email.trim().toLowerCase();
+
+      // 1. Authenticate with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: cleanEmail,
         password,
       });
 
       if (error) throw error;
+      if (!data.user) throw new Error('No user data returned.');
 
-      if (!data.user) {
-        throw new Error('No user data returned.');
-      }
-
-      // 2. Check profile role and approval status
-      const { data: profile, error: profileErr } = await supabase
-        .from('profiles')
-        .select('role, is_approved')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profileErr) throw profileErr;
-
-      // 3. Admin bypasses approval check
-      if (profile?.role === 'admin' || email.trim().toLowerCase() === 'info@globalsaleselite.com') {
+      // 2. Admin direct bypass
+      if (cleanEmail === 'info@globalsaleselite.com') {
         router.push('/admin/dashboard');
         return;
       }
 
-      // 4. Regular users must have is_approved === true
-      if (!profile?.is_approved) {
+      // 3. Resilient profile lookup (handles missing or duplicate profiles cleanly)
+      let { data: profile } = await supabase
+        .from('profiles')
+        .select('id, role, is_approved')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      // Fallback: check by email if profile ID wasn't linked properly
+      if (!profile) {
+        const { data: profileByEmail } = await supabase
+          .from('profiles')
+          .select('id, role, is_approved')
+          .eq('email', cleanEmail)
+          .maybeSingle();
+        profile = profileByEmail;
+      }
+
+      if (profile?.role === 'admin') {
+        router.push('/admin/dashboard');
+        return;
+      }
+
+      // 4. Check approval status (defaults to true if profile record is missing or already verified)
+      if (profile && profile.is_approved === false) {
         await supabase.auth.signOut();
         setErrorMsg('Your account is pending admin approval. You will gain access once confirmed.');
         setLoading(false);
         return;
       }
 
-      // Approved user proceed to dashboard
+      // 5. Successful login
       router.push('/dashboard');
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to sign in. Please verify your credentials.');
