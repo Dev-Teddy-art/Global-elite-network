@@ -5,6 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
+// ⚙️ TOGGLE REGISTRATION FEE:
+// Set to false for free testing registrations.
+// Set back to true when you want to enforce the ₦5,000 GTBank payment!
+const REQUIRE_PAYMENT = false;
+
 function SignupForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -29,7 +34,7 @@ function SignupForm() {
 
   // 20-Minute Countdown Timer
   useEffect(() => {
-    if (step !== 2 || timeLeft <= 0) return;
+    if (step !== 2 || timeLeft <= 0 || !REQUIRE_PAYMENT) return;
     const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [step, timeLeft]);
@@ -40,36 +45,11 @@ function SignupForm() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleProceedToPayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName || !email || !password) {
-      return alert('Please fill in all required fields.');
-    }
-    setStep(2);
-    setTimeLeft(20 * 60);
-  };
-
-  const handleInstantSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!proofFile) return alert('Please upload your payment receipt or transfer proof.');
-
+  // Common Registration Engine (used by both Free and Paid)
+  const registerUser = async (receiptUrl: string | null) => {
     setSubmitting(true);
     try {
-      // 1. Upload proof receipt to Supabase Storage
-      const fileExt = proofFile.name.split('.').pop();
-      const fileName = `receipt-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, proofFile);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      // 2. Resolve Sponsor ID if referral code was supplied
+      // 1. Resolve Sponsor ID if referral code was provided
       let resolvedSponsorId: string | null = null;
       if (referralCode) {
         const { data: sponsor } = await supabase
@@ -81,7 +61,7 @@ function SignupForm() {
         if (sponsor) resolvedSponsorId = sponsor.id;
       }
 
-      // 3. Create Supabase Auth Account
+      // 2. Create Supabase Auth Account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -97,18 +77,18 @@ function SignupForm() {
       const userId = authData.user?.id;
 
       if (userId) {
-        // 4. Update user profile with sponsor, phone, and receipt
+        // 3. Update user profile with sponsor, phone, and receipt
         await supabase
           .from('profiles')
           .update({
             full_name: fullName,
             phone_number: phone,
             referred_by: resolvedSponsorId,
-            avatar_url: publicUrl,
+            ...(receiptUrl ? { avatar_url: receiptUrl } : {}),
           })
           .eq('id', userId);
 
-        // 5. Record verification entry for admin reference
+        // 4. Record audit entry for admin dashboard
         await supabase
           .from('registration_requests')
           .insert({
@@ -117,8 +97,8 @@ function SignupForm() {
             password: 'PROCESSED_INSTANT',
             phone_number: phone,
             referred_by: referralCode || null,
-            amount: 5000,
-            proof_url: publicUrl,
+            amount: REQUIRE_PAYMENT ? 5000 : 0,
+            proof_url: receiptUrl || 'FREE_PROMO_REGISTRATION',
             status: 'approved',
           });
       }
@@ -132,6 +112,50 @@ function SignupForm() {
     }
   };
 
+  // Step 1 Submission handler
+  const handleStepOneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName || !email || !password) {
+      return alert('Please fill in all required fields.');
+    }
+
+    if (!REQUIRE_PAYMENT) {
+      // Immediate free sign-up
+      await registerUser(null);
+    } else {
+      // Advance to payment step
+      setStep(2);
+      setTimeLeft(20 * 60);
+    }
+  };
+
+  // Step 2 Submission handler (Paid)
+  const handlePaidSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!proofFile) return alert('Please upload your payment receipt or transfer proof.');
+
+    setSubmitting(true);
+    try {
+      const fileExt = proofFile.name.split('.').pop();
+      const fileName = `receipt-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, proofFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      await registerUser(publicUrl);
+    } catch (err: any) {
+      alert(`Upload error: ${err.message}`);
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto py-8">
       <div className="bg-white dark:bg-[#121620] p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6">
@@ -140,20 +164,24 @@ function SignupForm() {
         <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
             <h1 className="text-xl font-black text-slate-900 dark:text-white">
-              {step === 1 ? 'Step 1: Agent Registration' : 'Step 2: Bank Settlement'}
+              {REQUIRE_PAYMENT && step === 2 ? 'Step 2: Bank Settlement' : 'Agent Registration'}
             </h1>
             <p className="text-xs text-slate-500">
-              {step === 1 ? 'Enter your details & sponsor code' : 'Complete ₦5,000 fee within 20 mins'}
+              {REQUIRE_PAYMENT 
+                ? (step === 1 ? 'Enter your details & sponsor code' : 'Complete ₦5,000 fee within 20 mins') 
+                : 'Direct free registration portal (Test Mode)'}
             </p>
           </div>
-          <span className="text-xs font-mono font-bold bg-[#FF6B4A]/10 text-[#FF6B4A] px-3 py-1 rounded-full">
-            Step {step} of 2
-          </span>
+          {REQUIRE_PAYMENT && (
+            <span className="text-xs font-mono font-bold bg-[#FF6B4A]/10 text-[#FF6B4A] px-3 py-1 rounded-full">
+              Step {step} of 2
+            </span>
+          )}
         </div>
 
         {/* STEP 1: PERSONAL DETAILS */}
         {step === 1 && (
-          <form onSubmit={handleProceedToPayment} className="space-y-4">
+          <form onSubmit={handleStepOneSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Full Name *</label>
               <input
@@ -216,16 +244,21 @@ function SignupForm() {
 
             <button
               type="submit"
-              className="w-full bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-lg shadow-[#FF6B4A]/25 mt-2"
+              disabled={submitting}
+              className="w-full bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-lg shadow-[#FF6B4A]/25 mt-2 disabled:opacity-50"
             >
-              Continue to ₦5,000 Payment &rarr;
+              {submitting
+                ? 'Registering...'
+                : REQUIRE_PAYMENT
+                ? 'Continue to ₦5,000 Payment →'
+                : 'Complete Free Registration →'}
             </button>
           </form>
         )}
 
-        {/* STEP 2: BANK DETAILS, 20-MIN TIMER & PROOF UPLOAD */}
-        {step === 2 && (
-          <form onSubmit={handleInstantSignup} className="space-y-5">
+        {/* STEP 2: BANK DETAILS, 20-MIN TIMER & PROOF UPLOAD (Only active if REQUIRE_PAYMENT === true) */}
+        {REQUIRE_PAYMENT && step === 2 && (
+          <form onSubmit={handlePaidSubmit} className="space-y-5">
             {/* 20-Minute Countdown Display */}
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex justify-between items-center text-amber-600 dark:text-amber-400">
               <div>
@@ -277,7 +310,7 @@ function SignupForm() {
                 onClick={() => setStep(1)}
                 className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl text-xs transition"
               >
-                &larr; Back
+                ← Back
               </button>
 
               <button
@@ -285,7 +318,7 @@ function SignupForm() {
                 disabled={submitting || timeLeft <= 0}
                 className="w-full bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold py-3 rounded-xl text-xs transition disabled:opacity-50 shadow-lg shadow-[#FF6B4A]/25"
               >
-                {submitting ? 'Creating Account...' : 'Complete Registration'}
+                {submitting ? 'Verifying...' : 'Complete Registration'}
               </button>
             </div>
           </form>
@@ -301,7 +334,7 @@ export default function SignupPage() {
     <Suspense
       fallback={
         <div className="text-center py-20 text-xs font-bold text-slate-500">
-          Loading registration secure portal...
+          Loading registration portal...
         </div>
       }
     >
