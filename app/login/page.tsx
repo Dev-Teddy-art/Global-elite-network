@@ -5,87 +5,122 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-export default function Login() {
+export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setErrorMsg('');
 
-    const { data, error: authErr } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // 1. Authenticate with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    if (authErr || !data.user) {
-      setError(authErr?.message || 'Invalid login credentials.');
-      setLoading(false);
-      return;
-    }
+      if (error) throw error;
 
-    // Check user role to redirect appropriately
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .single();
+      if (!data.user) {
+        throw new Error('No user data returned.');
+      }
 
-    if (profile?.role === 'admin') {
-      router.push('/admin/dashboard');
-    } else {
+      // 2. Check profile role and approval status
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('role, is_approved')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileErr) throw profileErr;
+
+      // 3. Admin bypasses approval check
+      if (profile?.role === 'admin' || email.trim().toLowerCase() === 'info@globalsaleselite.com') {
+        router.push('/admin/dashboard');
+        return;
+      }
+
+      // 4. Regular users must have is_approved === true
+      if (!profile?.is_approved) {
+        await supabase.auth.signOut();
+        setErrorMsg('Your account is pending admin approval. You will gain access once confirmed.');
+        setLoading(false);
+        return;
+      }
+
+      // Approved user proceed to dashboard
       router.push('/dashboard');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to sign in. Please verify your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
-      <form onSubmit={handleLogin} className="w-full max-w-md bg-[#121620]/80 backdrop-blur-md p-8 rounded-2xl border border-slate-800/80 space-y-4 shadow-2xl">
-        <h1 className="text-2xl font-bold text-white">Login To Your Account</h1>
-        {error && <p className="text-xs text-[#E05244] bg-[#0B0E14] p-3 rounded-xl border border-slate-800">{error}</p>}
-
-        <div>
-          <label className="text-xs text-slate-400 font-medium">Email *</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 mt-1.5 bg-[#0B0E14] border border-slate-800 rounded-xl text-white focus:outline-none focus:border-[#E05244] transition"
-            placeholder="agent@globalsaleselite.com"
-          />
+    <div className="max-w-md mx-auto py-12">
+      <div className="bg-white dark:bg-[#121620] p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Agent Portal</h1>
+          <p className="text-xs text-slate-500">Sign in to access your downline network and payouts</p>
         </div>
 
-        <div>
-          <label className="text-xs text-slate-400 font-medium">Password *</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 mt-1.5 bg-[#0B0E14] border border-slate-800 rounded-xl text-white focus:outline-none focus:border-[#E05244] transition"
-          />
-        </div>
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs leading-relaxed">
+            {errorMsg}
+          </div>
+        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3.5 bg-[#E05244] hover:bg-[#c94336] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition shadow-lg shadow-[#E05244]/20 mt-2"
-        >
-          {loading ? 'Logging in...' : 'Sign In'}
-        </button>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="agent@example.com"
+              className="w-full bg-slate-50 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B4A] transition"
+            />
+          </div>
 
-        <p className="text-xs text-slate-400 text-center mt-4">
-          Need an account?{' '}
-          <Link href="/signup" className="text-[#E05244] hover:underline font-semibold">
-            Register here
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-slate-50 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#FF6B4A] transition"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-[#FF6B4A]/25 disabled:opacity-50"
+          >
+            {loading ? 'Authenticating...' : 'Sign In'}
+          </button>
+        </form>
+
+        <p className="text-center text-xs text-slate-500">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="text-[#FF6B4A] hover:underline font-bold">
+            Register Here
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 }

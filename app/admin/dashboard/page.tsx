@@ -15,7 +15,8 @@ export default function AdminDashboard() {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
-  // Receipt Preview Modal State
+  // Approval & Receipt Preview State
+  const [approvingEmail, setApprovingEmail] = useState<string | null>(null);
   const [previewReceiptUrl, setPreviewReceiptUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    // 1. Fetch Pending Sales
+    // 1. Pending Sales
     const { data: sales } = await supabase
       .from('sales')
       .select('id, amount, description, created_at, seller_id, profiles(full_name, email, bank_name, account_number, account_name)')
@@ -37,7 +38,7 @@ export default function AdminDashboard() {
 
     setPendingSales(sales || []);
 
-    // 2. Fetch Registration Payment Proofs
+    // 2. Registration Payment Proofs
     const { data: proofs } = await supabase
       .from('registration_requests')
       .select('*')
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
 
     setRegistrationProofs(proofs || []);
 
-    // 3. Fetch All Users
+    // 3. User Directory
     const { data: allUsers } = await supabase
       .from('profiles')
       .select('*')
@@ -54,7 +55,55 @@ export default function AdminDashboard() {
     setUsers(allUsers || []);
   };
 
-  const handleApprove = async (saleId: string) => {
+  const handleApproveUser = async (email: string, requestId: string) => {
+    setApprovingEmail(email);
+    try {
+      const res = await fetch('/api/admin/approve-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, requestId }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(`User ${email} is approved and can now log in!`);
+        setRegistrationProofs((prev) =>
+          prev.map((r) => (r.id === requestId ? { ...r, status: 'approved' } : r))
+        );
+        setUsers((prev) =>
+          prev.map((u) => (u.email === email ? { ...u, is_approved: true } : u))
+        );
+      } else {
+        alert(`Approval error: ${data.error}`);
+      }
+    } catch (err) {
+      alert('Network error approving user.');
+    } finally {
+      setApprovingEmail(null);
+    }
+  };
+
+  const handleFlagFakeReceipt = async (requestId: string, userEmail: string) => {
+    if (!confirm(`Flag this receipt as FAKE? This will mark it rejected in the audit log.`)) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('registration_requests')
+      .update({ status: 'rejected' })
+      .eq('id', requestId);
+
+    if (!error) {
+      alert('Receipt flagged as FAKE and rejected.');
+      setRegistrationProofs((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, status: 'rejected' } : r))
+      );
+    } else {
+      alert(`Error updating: ${error.message}`);
+    }
+  };
+
+  const handleApproveSale = async (saleId: string) => {
     setLoadingId(saleId);
     try {
       const res = await fetch('/api/admin/approve-sale', {
@@ -77,7 +126,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteSale = async (saleId: string) => {
-    if (!confirm('Are you sure you want to delete this pending sale? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete this pending sale? This cannot be undone.')) {
       return;
     }
 
@@ -92,7 +141,7 @@ export default function AdminDashboard() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        alert('Pending sale removed successfully.');
+        alert('Pending sale removed.');
         setPendingSales((prev) => prev.filter((s) => s.id !== saleId));
       } else {
         alert(`Failed to delete: ${data.error}`);
@@ -105,7 +154,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to delete user "${userName || 'N/A'}"? This action removes their profile and account permanently.`)) {
+    if (!confirm(`Delete user "${userName || 'N/A'}" permanently?`)) {
       return;
     }
 
@@ -120,38 +169,18 @@ export default function AdminDashboard() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        alert('User deleted successfully.');
+        alert('User deleted.');
         setUsers((prev) => prev.filter((u) => u.id !== userId));
         if (selectedUser?.id === userId) {
           setSelectedUser(null);
         }
       } else {
-        alert(`Failed to delete user: ${data.error}`);
+        alert(`Failed to delete: ${data.error}`);
       }
     } catch (err) {
       alert('Error connecting to server.');
     } finally {
       setDeletingUserId(null);
-    }
-  };
-
-  const handleFlagFakeReceipt = async (requestId: string, userEmail: string) => {
-    if (!confirm(`Flag receipt as FAKE? This will mark the registration as rejected. You can also delete the user account from the User Directory.`)) {
-      return;
-    }
-
-    const { error } = await supabase
-      .from('registration_requests')
-      .update({ status: 'rejected' })
-      .eq('id', requestId);
-
-    if (!error) {
-      alert('Receipt flagged as FAKE and rejected.');
-      setRegistrationProofs((prev) =>
-        prev.map((r) => (r.id === requestId ? { ...r, status: 'rejected' } : r))
-      );
-    } else {
-      alert(`Error updating: ${error.message}`);
     }
   };
 
@@ -163,17 +192,11 @@ export default function AdminDashboard() {
 
   const getSponsorInfo = (referredBy: string) => {
     if (!referredBy) return 'Direct Sign-up (No Sponsor)';
-    
     const cleanRef = referredBy.trim().toLowerCase();
     const sponsor = users.find(
       (u) => u.id?.toLowerCase() === cleanRef || u.referral_code?.toLowerCase() === cleanRef
     );
-
-    if (sponsor) {
-      return `${sponsor.full_name || 'User'} (${sponsor.referral_code})`;
-    }
-
-    return referredBy;
+    return sponsor ? `${sponsor.full_name || 'User'} (${sponsor.referral_code})` : referredBy;
   };
 
   const getLevel1ForUser = (userObj: any) => {
@@ -181,10 +204,7 @@ export default function AdminDashboard() {
     return users.filter((u) => {
       if (!u.referred_by) return false;
       const ref = u.referred_by.trim().toLowerCase();
-      const userCode = userObj.referral_code?.trim().toLowerCase();
-      const userId = userObj.id?.trim().toLowerCase();
-
-      return ref === userCode || ref === userId;
+      return ref === userObj.referral_code?.trim().toLowerCase() || ref === userObj.id?.trim().toLowerCase();
     });
   };
 
@@ -207,7 +227,7 @@ export default function AdminDashboard() {
     <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Admin Control Center</h1>
 
-      {/* REGISTRATION PAYMENT PROOF AUDIT QUEUE */}
+      {/* 1. REGISTRATION RECEIPTS AUDIT & APPROVAL QUEUE */}
       <div className="bg-white dark:bg-[#121620]/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-4 w-full shadow-sm">
         <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="space-y-1">
@@ -215,7 +235,7 @@ export default function AdminDashboard() {
               🧾 ₦5,000 Registration Receipts Audit
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Audit transfer proofs sent to GTBank (3005320529). Flag and remove fraudulent signups.
+              Review GTB transfer receipts, approve user access, or flag fraudulent submissions.
             </p>
           </div>
           <span className="text-xs font-mono bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-full">
@@ -234,20 +254,24 @@ export default function AdminDashboard() {
                       <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-semibold">
                         Live / Active
                       </span>
-                    ) : (
+                    ) : req.status === 'rejected' ? (
                       <span className="text-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded font-semibold">
                         Flagged Fake
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-semibold">
+                        Pending Admin Review
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{req.email} • {req.phone_number || 'No phone'}</p>
                   <p className="text-[11px] text-slate-400 font-mono">
-                    Sponsor Code: <strong className="text-amber-600 dark:text-amber-400">{req.referred_by || 'None (Direct)'}</strong> • Time: {new Date(req.created_at).toLocaleString()}
+                    Sponsor: <strong className="text-amber-600 dark:text-amber-400">{req.referred_by || 'None (Direct)'}</strong> • Date: {new Date(req.created_at).toLocaleString()}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  {req.proof_url ? (
+                  {req.proof_url && req.proof_url !== 'FREE_PROMO_REGISTRATION' ? (
                     <button
                       onClick={() => setPreviewReceiptUrl(req.proof_url)}
                       className="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition border border-slate-200 dark:border-slate-700"
@@ -255,7 +279,21 @@ export default function AdminDashboard() {
                       🔍 View Receipt
                     </button>
                   ) : (
-                    <span className="text-xs text-slate-500 italic">No proof attached</span>
+                    <span className="text-xs text-slate-500 italic pr-2">No receipt (Free promo)</span>
+                  )}
+
+                  {req.status !== 'approved' ? (
+                    <button
+                      onClick={() => handleApproveUser(req.email, req.id)}
+                      disabled={approvingEmail === req.email}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition disabled:opacity-50 shadow-sm"
+                    >
+                      {approvingEmail === req.email ? 'Activating...' : '✓ Approve & Activate'}
+                    </button>
+                  ) : (
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
+                      ✓ Approved & Active
+                    </span>
                   )}
 
                   {req.status !== 'rejected' && (
@@ -304,7 +342,7 @@ export default function AdminDashboard() {
                 rel="noreferrer"
                 className="text-xs text-[#FF6B4A] hover:underline font-semibold"
               >
-                Open in new tab &rarr;
+                Open full resolution &rarr;
               </a>
 
               <button
@@ -318,7 +356,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Pending Sales & Payout Verification */}
+      {/* 2. PENDING SALES LOGGED BY AGENTS */}
       <div className="bg-white dark:bg-[#121620]/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-4 w-full shadow-sm">
         <h2 className="text-lg sm:text-xl font-bold text-amber-500 dark:text-amber-400">Pending Sales Logged by Agents</h2>
         <div className="divide-y divide-slate-100 dark:divide-slate-800 w-full">
@@ -336,7 +374,7 @@ export default function AdminDashboard() {
                     </p>
                     <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed break-words">{sale.description}</p>
                     
-                    {/* Bank Details Preview */}
+                    {/* Bank Preview */}
                     <div className="bg-slate-50 dark:bg-[#0B0E14] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 my-1">
                       <span className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5">Seller Bank Details</span>
                       <p>Bank: <strong className="text-slate-900 dark:text-white">{sale.profiles?.bank_name || 'Not Set'}</strong> • Account: <strong className="text-slate-900 dark:text-white">{sale.profiles?.account_number || 'Not Set'}</strong> ({sale.profiles?.account_name || 'Not Set'})</p>
@@ -355,7 +393,7 @@ export default function AdminDashboard() {
 
                   <div className="flex items-center gap-2 w-full lg:w-auto pt-2 lg:pt-0">
                     <button
-                      onClick={() => handleApprove(sale.id)}
+                      onClick={() => handleApproveSale(sale.id)}
                       disabled={loadingId === sale.id || deletingSaleId === sale.id}
                       className="flex-1 lg:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition disabled:opacity-50 shadow-sm"
                     >
@@ -378,7 +416,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* User Directory */}
+      {/* 3. USER DIRECTORY */}
       <div className="bg-white dark:bg-[#121620]/80 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-4 w-full shadow-sm">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 w-full">
           <div className="flex items-center gap-3">
@@ -404,10 +442,16 @@ export default function AdminDashboard() {
                   #{index + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-sm text-slate-900 dark:text-white break-words">
-                    {u.full_name || 'N/A'}{' '}
-                    <span className="text-xs text-[#FF6B4A] font-medium">({u.role})</span>
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white break-words">
+                      {u.full_name || 'N/A'} <span className="text-xs text-[#FF6B4A] font-medium">({u.role})</span>
+                    </p>
+                    {u.is_approved ? (
+                      <span className="text-[9px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-1.5 py-0.5 rounded font-bold">Approved</span>
+                    ) : (
+                      <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1.5 py-0.5 rounded font-bold">Pending</span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 break-all">{u.email}</p>
                 </div>
               </div>
@@ -451,44 +495,32 @@ export default function AdminDashboard() {
             <div className="space-y-3 text-xs border-b border-slate-200 dark:border-slate-800 pb-4 break-words">
               <p><strong className="text-slate-500 dark:text-slate-400">Full Name:</strong> {selectedUser.full_name}</p>
               <p><strong className="text-slate-500 dark:text-slate-400">Email:</strong> <span className="break-all">{selectedUser.email}</span></p>
+              <p><strong className="text-slate-500 dark:text-slate-400">Status:</strong> {selectedUser.is_approved ? 'Approved' : 'Pending Activation'}</p>
               <p><strong className="text-slate-500 dark:text-slate-400">Phone:</strong> {selectedUser.phone_number || 'Not provided'}</p>
-              <p><strong className="text-slate-500 dark:text-slate-400">Date of Birth:</strong> {selectedUser.date_of_birth || 'Not provided'}</p>
               <p><strong className="text-slate-500 dark:text-slate-400">Bank Name:</strong> {selectedUser.bank_name || 'Not provided'}</p>
               <p><strong className="text-slate-500 dark:text-slate-400">Account Name:</strong> {selectedUser.account_name || 'Not provided'}</p>
               <p><strong className="text-slate-500 dark:text-slate-400">Account Number:</strong> {selectedUser.account_number || 'Not provided'}</p>
               <p><strong className="text-slate-500 dark:text-slate-400">Referral Code:</strong> <span className="font-mono text-amber-600 dark:text-amber-400 break-all font-bold">{selectedUser.referral_code}</span></p>
-              <p><strong className="text-slate-500 dark:text-slate-400">Sponsor (Referred By):</strong> <span className="text-amber-600 dark:text-amber-400 font-semibold break-words">{getSponsorInfo(selectedUser.referred_by)}</span></p>
+              <p><strong className="text-slate-500 dark:text-slate-400">Sponsor:</strong> <span className="text-amber-600 dark:text-amber-400 font-semibold break-words">{getSponsorInfo(selectedUser.referred_by)}</span></p>
             </div>
 
-            {/* Binary Downline Tree */}
+            {/* Downline Tree */}
             <div className="space-y-3">
               <h4 className="text-sm font-bold text-amber-600 dark:text-amber-400">Network Tree</h4>
               
-              <div className="bg-slate-50 dark:bg-[#0B0E14] p-4 rounded-2xl border border-slate-200 dark:border-slate-800/80 overflow-x-auto min-h-[300px] flex items-center justify-center">
-                <div className="min-w-[500px] flex flex-col items-center py-2">
-                  
-                  {/* ROOT */}
+              <div className="bg-slate-50 dark:bg-[#0B0E14] p-4 rounded-2xl border border-slate-200 dark:border-slate-800/80 overflow-x-auto min-h-[250px] flex items-center justify-center">
+                <div className="min-w-[480px] flex flex-col items-center py-2">
                   <div className="flex flex-col items-center relative">
-                    <div className="bg-white dark:bg-[#121620] border-2 border-[#FF6B4A] px-5 py-2 rounded-2xl text-center shadow-lg z-10 w-52">
-                      <span className="text-[8px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider block">ROOT LEG</span>
+                    <div className="bg-white dark:bg-[#121620] border-2 border-[#FF6B4A] px-5 py-2 rounded-2xl text-center shadow-lg z-10 w-48">
+                      <span className="text-[8px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider block">ROOT</span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{selectedUser.full_name || 'Agent'}</p>
-                      <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">{selectedUser.email}</p>
                     </div>
-                    
-                    {modalL1.length > 0 && (
-                      <div className="w-0.5 h-6 bg-gradient-to-b from-[#FF6B4A] to-slate-400 dark:to-slate-700"></div>
-                    )}
+                    {modalL1.length > 0 && <div className="w-0.5 h-6 bg-gradient-to-b from-[#FF6B4A] to-slate-400 dark:to-slate-700"></div>}
                   </div>
 
-                  {/* LEVEL 1 */}
                   {modalL1.length > 0 ? (
                     <div className="w-full flex flex-col items-center">
-                      {modalL1.length > 1 && (
-                        <div className="relative w-3/4 flex justify-between items-center">
-                          <div className="absolute top-0 left-0 right-0 h-0.5 bg-slate-300 dark:bg-slate-700"></div>
-                        </div>
-                      )}
-
+                      {modalL1.length > 1 && <div className="w-3/4 h-0.5 bg-slate-300 dark:bg-slate-700"></div>}
                       <div className={`w-full grid ${modalL1.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-6 pt-3`}>
                         {modalL1.map((l1) => {
                           const subDownlines = modalL2.filter((l2) => {
@@ -498,36 +530,21 @@ export default function AdminDashboard() {
 
                           return (
                             <div key={l1.id} className="flex flex-col items-center">
-                              <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-700 px-3 py-2.5 rounded-2xl text-center shadow-md w-52 space-y-1 relative z-10">
-                                <span className="text-[8px] uppercase font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                                  Level 1
-                                </span>
-                                <p className="text-xs font-bold text-slate-900 dark:text-white truncate mt-0.5">{l1.full_name || 'Agent'}</p>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{l1.email}</p>
-                                <code className="text-[9px] font-mono text-amber-600 dark:text-amber-400 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 inline-block">
-                                  {l1.referral_code}
-                                </code>
+                              <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-2xl text-center shadow-md w-48 space-y-1">
+                                <span className="text-[8px] uppercase font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">Level 1</span>
+                                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{l1.full_name || 'Agent'}</p>
                               </div>
 
-                              {subDownlines.length > 0 && (
-                                <div className="w-0.5 h-5 bg-slate-300 dark:bg-slate-700"></div>
-                              )}
+                              {subDownlines.length > 0 && <div className="w-0.5 h-4 bg-slate-300 dark:bg-slate-700"></div>}
 
-                              {/* LEVEL 2 */}
                               {subDownlines.length > 0 && (
-                                <div className="w-full flex flex-col items-center">
-                                  {subDownlines.length > 1 && (
-                                    <div className="w-1/2 h-0.5 bg-slate-200 dark:bg-slate-800 my-1"></div>
-                                  )}
-
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 w-full pt-1">
-                                    {subDownlines.map((l2) => (
-                                      <div key={l2.id} className="bg-white dark:bg-[#121620]/90 border border-slate-200 dark:border-slate-800/80 p-1.5 rounded-xl text-center shadow-sm">
-                                        <span className="text-[7px] uppercase font-bold text-slate-400 dark:text-slate-500 block">L2 Leg</span>
-                                        <p className="text-[10px] font-semibold text-slate-700 dark:text-slate-200 truncate">{l2.full_name || 'Sub-Agent'}</p>
-                                      </div>
-                                    ))}
-                                  </div>
+                                <div className="grid grid-cols-2 gap-1.5 w-full pt-1">
+                                  {subDownlines.map((l2) => (
+                                    <div key={l2.id} className="bg-white dark:bg-[#121620]/90 border border-slate-200 dark:border-slate-800/80 p-1.5 rounded-xl text-center">
+                                      <span className="text-[7px] uppercase font-bold text-slate-400 block">L2</span>
+                                      <p className="text-[10px] font-semibold truncate">{l2.full_name || 'Sub-Agent'}</p>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
@@ -536,7 +553,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-500 py-4">This agent has not referred any team members yet.</p>
+                    <p className="text-xs text-slate-500 py-4">No team members recruited yet.</p>
                   )}
                 </div>
               </div>
