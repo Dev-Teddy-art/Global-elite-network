@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 // ⚙️ TOGGLE REGISTRATION FEE:
-// Set to false for testing free registrations.
+// Set to false for free testing registrations.
 // Set to true to enforce the ₦5,000 GTBank payment + proof upload.
 const REQUIRE_PAYMENT = false;
 
@@ -48,24 +48,29 @@ function SignupForm() {
   const registerUser = async (receiptUrl: string | null) => {
     setSubmitting(true);
     try {
-      // 1. Resolve Sponsor ID
+      const cleanName = fullName.trim();
+      const cleanEmail = email.trim().toLowerCase();
+
+      // 1. Resolve Sponsor ID if referral code was provided
       let resolvedSponsorId: string | null = null;
       if (referralCode) {
         const { data: sponsor } = await supabase
           .from('profiles')
           .select('id')
           .or(`referral_code.eq.${referralCode.trim()},id.eq.${referralCode.trim()}`)
-          .single();
+          .maybeSingle();
 
         if (sponsor) resolvedSponsorId = sponsor.id;
       }
 
-      // 2. Create Auth User
+      // 2. Create Auth User with user_metadata populated
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: cleanEmail,
         password,
         options: {
-          data: { full_name: fullName },
+          data: {
+            full_name: cleanName,
+          },
         },
       });
 
@@ -74,30 +79,35 @@ function SignupForm() {
       const userId = authData.user?.id;
 
       if (userId) {
-        // 3. Mark profile as is_approved: false by default
+        // 3. Upsert into profiles directly to guarantee full_name is never null
         await supabase
           .from('profiles')
-          .update({
-            full_name: fullName,
-            phone_number: phone,
-            referred_by: resolvedSponsorId,
-            is_approved: false, // Locked until admin approves
-            ...(receiptUrl ? { avatar_url: receiptUrl } : {}),
-          })
-          .eq('id', userId);
+          .upsert(
+            {
+              id: userId,
+              email: cleanEmail,
+              full_name: cleanName,
+              phone_number: phone.trim(),
+              referred_by: resolvedSponsorId,
+              is_approved: false, // Locked until admin approves
+              role: 'agent',
+              ...(receiptUrl ? { avatar_url: receiptUrl } : {}),
+            },
+            { onConflict: 'id' }
+          );
 
-        // 4. Create registration audit record with status 'pending'
+        // 4. Create registration audit record for the admin dashboard
         await supabase
           .from('registration_requests')
           .insert({
-            full_name: fullName,
-            email: email.trim(),
+            full_name: cleanName,
+            email: cleanEmail,
             password: 'REGISTERED_PENDING_APPROVAL',
-            phone_number: phone,
-            referred_by: referralCode || null,
+            phone_number: phone.trim(),
+            referred_by: referralCode.trim() || null,
             amount: REQUIRE_PAYMENT ? 5000 : 0,
             proof_url: receiptUrl || 'FREE_PROMO_REGISTRATION',
-            status: 'pending', // Awaiting admin confirmation
+            status: 'pending',
           });
       }
 
@@ -186,7 +196,7 @@ function SignupForm() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
+                placeholder="e.g. Nancy Ugwah"
                 className="w-full bg-slate-50 dark:bg-[#0B0E14] border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white"
               />
             </div>

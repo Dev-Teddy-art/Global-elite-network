@@ -31,20 +31,19 @@ export default function UserDashboard() {
   }, []);
 
   const loadDashboardData = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) {
       router.push('/login');
       return;
     }
 
-    // 1. Fetch profile with maybeSingle() to avoid JSON coercion crashes
+    // 1. Fetch profile with fallback
     let { data: prof } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .maybeSingle();
 
-    // Fallback lookup by email if ID not matched
     if (!prof && user.email) {
       const { data: profByEmail } = await supabase
         .from('profiles')
@@ -54,8 +53,17 @@ export default function UserDashboard() {
       prof = profByEmail;
     }
 
+    // Recover real full name from user metadata if profile table has null or placeholder
+    const realFullName =
+      prof?.full_name && prof.full_name !== 'Agent'
+        ? prof.full_name
+        : user.user_metadata?.full_name || 'Agent';
+
     if (prof) {
-      setProfile(prof);
+      setProfile({
+        ...prof,
+        full_name: realFullName,
+      });
       setPhone(prof.phone_number || '');
       setDob(prof.date_of_birth || '');
       setBankName(prof.bank_name || '');
@@ -116,6 +124,13 @@ export default function UserDashboard() {
           setLevel2Users(l2 || []);
         }
       }
+    } else {
+      // If profile record didn't exist, create minimal state so the screen doesn't break
+      setProfile({
+        id: user.id,
+        email: user.email,
+        full_name: realFullName,
+      });
     }
   };
 
@@ -165,6 +180,7 @@ export default function UserDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert('User session expired. Please sign in again.');
+        router.push('/login');
         return;
       }
 
@@ -176,19 +192,31 @@ export default function UserDashboard() {
         account_name: accountName,
       };
 
-      const { error } = await supabase
+      // 1. Update by ID
+      const { error: idError } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
 
-      if (error) throw error;
+      // 2. Fallback update by email if ID not matched
+      if (idError && user.email) {
+        const { error: emailError } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('email', user.email);
 
+        if (emailError) throw emailError;
+      } else if (idError) {
+        throw idError;
+      }
+
+      // Update local state smoothly
       setProfile((prev: any) => ({
         ...(prev || {}),
         ...updates,
       }));
 
-      alert('Account & Payout settings updated successfully!');
+      alert('Account & Bank details saved successfully!');
     } catch (err: any) {
       alert(`Update failed: ${err.message || 'Error saving changes'}`);
     } finally {
@@ -220,7 +248,7 @@ export default function UserDashboard() {
 
       if (error) throw error;
 
-      alert('Sale logged successfully! Awaiting admin verification and commission payout.');
+      alert('Sale logged successfully! Awaiting admin verification.');
       setAmount('');
       setDescription('');
       if (newSale) {
