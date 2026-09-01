@@ -7,20 +7,105 @@ import type { Metadata, Viewport } from 'next';
 
 export const viewport: Viewport = {
   themeColor: '#0B0E14',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export const metadata: Metadata = {
-  title: 'Global Sales Elite | Maximize Your Earnings',
-  description: 'Multi-Tier Sales & Commission Platform',
+  metadataBase: new URL('https://globalsaleselite.com'),
+  title: {
+    default: 'Global Sales Elite | Premier Real Estate Network Marketing Platform',
+    template: '%s | Global Sales Elite',
+  },
+  description:
+    'Empowering the next generation of sales professionals with high-ticket real estate commissions, transparent binary matrix rewards, 15% direct earnings, and 3% override payouts.',
+  keywords: [
+    'Global Sales Elite',
+    'Real Estate Affiliate Nigeria',
+    'High Ticket Real Estate Sales',
+    'Network Marketing Real Estate',
+    'Binary Matrix Real Estate',
+    'Property Affiliate Commission Lagos',
+    'Direct Commission Properties',
+    'Real Estate Referral Marketing',
+  ],
+  authors: [{ name: 'Global Sales Elite Team' }],
+  creator: 'Global Sales Elite',
+  publisher: 'Global Sales Elite',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
-    icon: 'favicon.ico/icon.png',
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
+  alternates: {
+    canonical: 'https://globalsaleselite.com',
+  },
+  openGraph: {
+    title: 'Global Sales Elite | Premier Real Estate Network Marketing',
+    description:
+      'Scale your property earnings with Nigeria’s leading high-yield real estate marketing infrastructure. 15% direct commissions and 3% binary overrides.',
+    url: 'https://globalsaleselite.com',
+    siteName: 'Global Sales Elite',
+    locale: 'en_NG',
+    type: 'website',
+    images: [
+      {
+        url: 'https://globalsaleselite.com/logo1.png',
+        width: 1200,
+        height: 630,
+        alt: 'Global Sales Elite - Real Estate Network Platform',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Global Sales Elite | Premier Real Estate Network Marketing',
+    description:
+      'High-yield real estate affiliate infrastructure. Earn direct & downline binary commissions with fast automated admin verification.',
+    images: ['https://globalsaleselite.com/logo1.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Global Sales Elite',
+    url: 'https://globalsaleselite.com',
+    logo: 'https://globalsaleselite.com/logo1.png',
+    description:
+      'Transparent, high-yield network marketing infrastructure for modern real estate sales professionals.',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'info@globalsaleselite.com',
+      contactType: 'customer support',
+      areaServed: 'NG',
+      availableLanguage: 'en',
+    },
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-slate-50 dark:bg-[#0B0E14] text-slate-900 dark:text-white min-h-screen flex flex-col justify-between selection:bg-[#FF6B4A] selection:text-white overflow-x-hidden transition-colors duration-300">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <Navbar />
 
