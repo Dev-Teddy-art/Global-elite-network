@@ -5,10 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-// ⚙️ TOGGLE REGISTRATION FEE:
-// Set to false for free testing registrations.
-// Set to true to enforce the ₦5,000 GTBank payment + proof upload.
-const REQUIRE_PAYMENT = false;
+// ⚙️ REGISTRATION FEE: Active (₦5,000 GTBank payment + proof upload)
+const REQUIRE_PAYMENT = true;
 
 function SignupForm() {
   const searchParams = useSearchParams();
@@ -51,17 +49,22 @@ function SignupForm() {
     try {
       const cleanName = fullName.trim();
       const cleanEmail = email.trim().toLowerCase();
+      const cleanRef = referralCode.trim();
 
-      // 1. Resolve Sponsor ID if referral code was provided
+      // 1. Case-insensitive sponsor resolution
       let resolvedSponsorId: string | null = null;
-      if (referralCode) {
+      if (cleanRef) {
         const { data: sponsor } = await supabase
           .from('profiles')
-          .select('id')
-          .or(`referral_code.eq.${referralCode.trim()},id.eq.${referralCode.trim()}`)
+          .select('id, referral_code')
+          .or(`referral_code.ilike.${cleanRef},id.eq.${cleanRef},email.ilike.${cleanRef}`)
           .maybeSingle();
 
-        if (sponsor) resolvedSponsorId = sponsor.id;
+        if (sponsor) {
+          resolvedSponsorId = sponsor.id;
+        } else {
+          resolvedSponsorId = cleanRef;
+        }
       }
 
       // 2. Create Auth User with user_metadata populated
@@ -71,6 +74,7 @@ function SignupForm() {
         options: {
           data: {
             full_name: cleanName,
+            referred_by: resolvedSponsorId || cleanRef || null,
           },
         },
       });
@@ -89,15 +93,15 @@ function SignupForm() {
               email: cleanEmail,
               full_name: cleanName,
               phone_number: phone.trim(),
-              referred_by: resolvedSponsorId,
-              is_approved: false,
+              referred_by: resolvedSponsorId || cleanRef || null,
+              is_approved: false, // Locked until admin review
               role: 'agent',
               ...(receiptUrl ? { avatar_url: receiptUrl } : {}),
             },
             { onConflict: 'id' }
           );
 
-        // 4. Create registration audit record
+        // 4. Create registration audit record for the admin dashboard
         await supabase
           .from('registration_requests')
           .insert({
@@ -105,9 +109,9 @@ function SignupForm() {
             email: cleanEmail,
             password: 'REGISTERED_PENDING_APPROVAL',
             phone_number: phone.trim(),
-            referred_by: referralCode.trim() || null,
-            amount: REQUIRE_PAYMENT ? 5000 : 0,
-            proof_url: receiptUrl || 'FREE_PROMO_REGISTRATION',
+            referred_by: cleanRef || null,
+            amount: 5000,
+            proof_url: receiptUrl || 'NO_PROOF_UPLOADED',
             status: 'pending',
           });
       }
@@ -116,7 +120,7 @@ function SignupForm() {
       await supabase.auth.signOut();
 
       alert(
-        'Registration submitted successfully! Your account is currently pending admin verification. You will be able to log in once activated.'
+        'Registration submitted successfully! Your ₦5,000 transfer receipt has been forwarded for admin verification. You will be able to log in once your account is activated.'
       );
       router.push('/login');
     } catch (err: any) {
@@ -132,12 +136,8 @@ function SignupForm() {
       return alert('Please fill in all required fields.');
     }
 
-    if (!REQUIRE_PAYMENT) {
-      await registerUser(null);
-    } else {
-      setStep(2);
-      setTimeLeft(20 * 60);
-    }
+    setStep(2);
+    setTimeLeft(20 * 60);
   };
 
   const handlePaidSubmit = async (e: React.FormEvent) => {
@@ -173,19 +173,15 @@ function SignupForm() {
         <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
             <h1 className="text-xl font-black text-slate-900 dark:text-white">
-              {REQUIRE_PAYMENT && step === 2 ? 'Step 2: Bank Settlement' : 'Agent Registration'}
+              {step === 2 ? 'Step 2: Bank Settlement' : 'Agent Registration'}
             </h1>
             <p className="text-xs text-slate-500">
-              {REQUIRE_PAYMENT 
-                ? (step === 1 ? 'Enter your details & sponsor code' : 'Complete ₦5,000 fee within 20 mins') 
-                : 'Registration subject to admin activation'}
+              {step === 1 ? 'Enter your details & sponsor code' : 'Complete ₦5,000 fee within 20 mins'}
             </p>
           </div>
-          {REQUIRE_PAYMENT && (
-            <span className="text-xs font-mono font-bold bg-[#FF6B4A]/10 text-[#FF6B4A] px-3 py-1 rounded-full">
-              Step {step} of 2
-            </span>
-          )}
+          <span className="text-xs font-mono font-bold bg-[#FF6B4A]/10 text-[#FF6B4A] px-3 py-1 rounded-full">
+            Step {step} of 2
+          </span>
         </div>
 
         {step === 1 && (
@@ -274,16 +270,12 @@ function SignupForm() {
               disabled={submitting}
               className="w-full bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold py-3.5 rounded-xl text-xs transition shadow-lg shadow-[#FF6B4A]/25 mt-2 disabled:opacity-50"
             >
-              {submitting
-                ? 'Submitting Registration...'
-                : REQUIRE_PAYMENT
-                ? 'Continue to ₦5,000 Payment →'
-                : 'Submit Registration for Admin Approval →'}
+              Continue to ₦5,000 Payment →
             </button>
           </form>
         )}
 
-        {REQUIRE_PAYMENT && step === 2 && (
+        {step === 2 && (
           <form onSubmit={handlePaidSubmit} className="space-y-5">
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex justify-between items-center text-amber-600 dark:text-amber-400">
               <div>
@@ -341,7 +333,7 @@ function SignupForm() {
                 disabled={submitting || timeLeft <= 0}
                 className="w-full bg-[#FF6B4A] hover:bg-[#e05638] text-white font-bold py-3 rounded-xl text-xs transition disabled:opacity-50 shadow-lg shadow-[#FF6B4A]/25"
               >
-                {submitting ? 'Submitting...' : 'Complete Registration'}
+                {submitting ? 'Submitting Receipt...' : 'Complete Registration'}
               </button>
             </div>
           </form>

@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: 'public/favicon.ico/icon.png',
+    icon: 'favicon.ico/icon.png',
     apple: '/icon.png',
   },
   alternates: {
